@@ -71,7 +71,7 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
         if frame_idx < 10:
             imagen_numero_1 = f"Cuadros000{frame_idx}.jpg"
         elif 100 > frame_idx >= 10:
-            imagen_numero_1 = f"0Cuadros0{frame_idx}.jpg"
+            imagen_numero_1 = f"Cuadros00{frame_idx}.jpg"
         elif 1000 > frame_idx >= 100:
             imagen_numero_1 = f"Cuadros0{frame_idx}.jpg"
         else:
@@ -203,7 +203,7 @@ ws = 32
 ss = 32
 ol = 20
 threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
-x, y, U, V = get_velocity_field(start=400, stop=401, path=path_images, fps=fps,
+x, y, U, V = get_velocity_field(start=200, stop=201, path=path_images, fps=fps,
                                 pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
                                 overlap=ol, threshold=threshold, replace_outliers=False)
 
