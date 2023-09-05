@@ -71,7 +71,7 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
         if frame_idx < 10:
             imagen_numero_1 = f"Cuadros000{frame_idx}.jpg"
         elif 100 > frame_idx >= 10:
-            imagen_numero_1 = f"0Cuadros0{frame_idx}.jpg"
+            imagen_numero_1 = f"0Cuadros00{frame_idx}.jpg"
         elif 1000 > frame_idx >= 100:
             imagen_numero_1 = f"Cuadros0{frame_idx}.jpg"
         else:
