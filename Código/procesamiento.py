@@ -195,7 +195,7 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
 
 #%%
 
-path_images = "Cuadros/" ### format "folder/folder/"
+path_images = "Cuadros procesados/" ### format "folder/folder/"
 fps = 59
 
 pixel2cm = 961.338 / 14.5 ### scale in pixel/cm
@@ -203,13 +203,16 @@ ws = 32
 ss = 32
 ol = 20
 threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
-x, y, U, V = get_velocity_field(start=400, stop=401, path=path_images, fps=fps,
+x, y, U, V = get_velocity_field(start=25, stop=26, path=path_images, fps=fps,
                                 pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
                                 overlap=ol, threshold=threshold, replace_outliers=False)
 
 #%%
 
 def mean_velocity_field(F):
+    """
+    Promediar campo de velocidades entre todos los frames.
+    """
     F_total = np.zeros_like(F[0])
     F_total_err = np.zeros_like(F[0])
     for i in tqdm(range(F[0].shape[0])):
@@ -227,9 +230,22 @@ def mean_velocity_field(F):
     return F_total, F_total_err
 
 #%%
-
+# Calcular campos de velocidades promediados
 U_total, U_total_err = mean_velocity_field(U)
 V_total, V_total_err = mean_velocity_field(V)
+
+#%%
+save_file_name = "prueba"
+
+# Guardar campos promediados como txt
+mask = np.zeros(U[0].shape, dtype=bool) ### Define the mask as an all-true matrix, bc we wont take into account the error in calculating the velocities for each frame.
+tools.save(x, y, U_total, V_total, mask, path_images+save_file_name+'.txt')
+
+# Guardar campos promediados como archivo comprimido de numpy
+np.savez_compressed(path_images+save_file_name, x=x, y=y, U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
+
+# Guardar campos por frame como archivo comprimido de numpy
+np.savez_compressed(path_images+save_file_name+" velocity_lists", Ulist=U, Vlist=V)
 
 #%%
 
@@ -249,24 +265,9 @@ U_grid = griddata(xy_points, U_flattened, (x_mesh, y_mesh), method="cubic")
 V_grid = griddata(xy_points, V_flattened, (x_mesh, y_mesh), method="cubic")
 
 #%%
-
-save_file_name = "prueba"
-
-
-mask = np.zeros(U[0].shape, dtype=bool) ### Define the mask as an all-true matrix, bc we wont take into account the error in calculating the velocities for each frame.
-tools.save(x, y, U_total, V_total, mask, path_images+save_file_name+'.txt')
-
-
-
-np.savez_compressed(path_images+save_file_name, x=x, y=y, U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
-
-np.savez_compressed(path_images+save_file_name+" velocity_lists", Ulist=U, Vlist=V)
-
-
-#%%
 fig, axs = plt.subplots(1, 2, figsize=(32, 16), dpi=100)
 axs[0].quiver(x_mesh, y_mesh, U_grid, V_grid, np.sqrt(U_grid**2 + V_grid**2), lw=.2)
-frame = plt.imread(path_images+"Cuadros0000.jpg")
+frame = plt.imread(path_images+"Cuadros0025.jpg") #Ver esta linea!!!
 axs[0].imshow(frame, extent=[np.min(x_mesh), np.max(x_mesh), np.min(y_mesh), np.max(y_mesh)])
 axs[0].streamplot(x_mesh, y_mesh, U_grid, V_grid, density=2)
 axs[0].set_title("interpolacion y streamplot de la interpolacion para destilada lento")
