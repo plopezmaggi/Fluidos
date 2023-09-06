@@ -46,7 +46,7 @@ def video2images(video_path, images_path):
 #%%
 """ Esto hace lo mismo (partir en frames) pero además procesa las imágenes para mejorar el contraste """
      
-def pre_process(dir: str, file_name: str, stop_at: int, folder="", method="KNN", filter_color=False):
+def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder="", method="KNN", filter_color=False):
     """ Process each individual frame of a video, generating a high contrast set of frames.
     It removes the background and light reflections on the surface of the fluid, with an optional
     feature of removing the color.
@@ -56,8 +56,8 @@ def pre_process(dir: str, file_name: str, stop_at: int, folder="", method="KNN",
     ----------
     dir, file_name : str
         directory and file-name for the video you'd like to process. 
-    stop_at : int
-        Frame number at wich to stop.
+    start_at, stop_at : int
+        Frame number at which to start and stop.
     folder (optional) : str
         name of the folder in wich the images will be saved, on the same location as the video.
     method : str
@@ -92,48 +92,119 @@ def pre_process(dir: str, file_name: str, stop_at: int, folder="", method="KNN",
         if frame is None:
             break
         
-        fgMask = backSub.apply(frame) ### Substract background
-        
-        cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
-        cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
-        cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-        
-
-
-        res1 = cv.bitwise_and(frame, frame, mask=fgMask)
-
-        gray = cv.cvtColor(res1, cv.COLOR_BGR2GRAY)
-
-        # threshold grayscale image to extract glare - Lo pasa a escala de grises, extrae el resplandor
-        mask = cv.threshold(gray, 220, 255, cv.THRESH_BINARY)[1]
-        res2 = cv.inpaint(res1, mask, 21, cv.INPAINT_TELEA) 
-
-        #Genera el nombre del archivo para la imagen procesada
-
-        if i < 10:
-            imagen_numero = f"Cuadros000{i}.jpg"
-        elif 100 > i >= 10:
-            imagen_numero = f"Cuadros00{i}.jpg"
-        elif 1000 > i >= 100:
-            imagen_numero = f"Cuadros0{i}.jpg"
-        else:
-            imagen_numero = f"Cuadros{i}.jpg"
-
-        if filter_color:
-
-            ### convert the BGR image to HSV colour space
-            hsv = cv.cvtColor(res2, cv.COLOR_BGR2HSV)
-
-            ### set the lower and upper bounds for the color hue
-            lower_color = np.array([0, 0, 0])
-            upper_color = np.array([180, 255, 255])
- 
-            ### create a mask for color colour using inRange function
-            mask = cv.inRange(hsv, lower_color, upper_color)
-
-            ### perform bitwise and on the original image arrays using the mask
-            res3 = cv.bitwise_and(res2, res2, mask=mask)
+        if i >= start_at:
+            fgMask = backSub.apply(frame) ### Substract background
             
+            cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
+            cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
+            cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
+            
+    
+    
+            res1 = cv.bitwise_and(frame, frame, mask=fgMask)
+    
+            gray = cv.cvtColor(res1, cv.COLOR_BGR2GRAY)
+    
+            # threshold grayscale image to extract glare - Lo pasa a escala de grises, extrae el resplandor
+            mask = cv.threshold(gray, 220, 255, cv.THRESH_BINARY)[1]
+            res2 = cv.inpaint(res1, mask, 21, cv.INPAINT_TELEA) 
+    
+            #Genera el nombre del archivo para la imagen procesada
+    
+            if i < 10:
+                imagen_numero = f"Cuadros000{i}.jpg"
+            elif 100 > i >= 10:
+                imagen_numero = f"Cuadros00{i}.jpg"
+            elif 1000 > i >= 100:
+                imagen_numero = f"Cuadros0{i}.jpg"
+            else:
+                imagen_numero = f"Cuadros{i}.jpg"
+    
+            if filter_color:
+    
+                ### convert the BGR image to HSV colour space
+                hsv = cv.cvtColor(res2, cv.COLOR_BGR2HSV)
+    
+                ### set the lower and upper bounds for the color hue
+                lower_color = np.array([0, 0, 0])
+                upper_color = np.array([180, 255, 255])
+     
+                ### create a mask for color colour using inRange function
+                mask = cv.inRange(hsv, lower_color, upper_color)
+    
+                ### perform bitwise and on the original image arrays using the mask
+                res3 = cv.bitwise_and(res2, res2, mask=mask)
+                
+                ### display original frame, and filtered black and white frame. 
+                cv.imshow('Frame', frame)
+                cv.imshow('FG Mask', mask)
+                
+                #Recorte circular
+                
+                center_x = 554  # coordenada x del centro en px
+                center_y = 929  # coordenada y del centro en px
+                radius = 450    # radio
+                x1 = center_x - radius
+                y1 = center_y - radius
+                x2 = center_x + radius
+                y2 = center_y + radius
+                x1 = max(x1, 0)
+                y1 = max(y1, 0)
+                
+                
+                mask = np.zeros_like(res3)
+                cv.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)  
+                
+                cropped_image = cv.bitwise_and(res3, mask)
+                
+                cropped_image = cropped_image[y1:y2, x1:x2]
+    
+                ### Save file
+                cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
+                i += 1
+    
+            else:
+                ### display original frame, and filtered frame. 
+                # Acá me muestra la imagen original y la procesada
+                cv.imshow('Frame', frame)
+                cv.imshow('FG Mask', res2)
+                
+                #Corta circulo:
+                
+                center_x = 554  
+                center_y = 929  
+                radius = 450   
+                x1 = center_x - radius
+                y1 = center_y - radius
+                x2 = center_x + radius
+                y2 = center_y + radius
+                x1 = max(x1, 0)
+                y1 = max(y1, 0)
+                
+                
+                mask = np.zeros_like(res2)
+                cv.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)  
+                
+                
+                cropped_image = cv.bitwise_and(res2, mask)
+                
+                
+                cropped_image = cropped_image[y1:y2, x1:x2]
+            
+            
+                ### Save file
+                cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
+                i += 1
+            
+            Masks.append(mask) ### Add mask to mask list
+    
+            ### Display progress
+            if i%20 == 0:
+                print(i, end="\r")
+
+            keyboard = cv.waitKey(30)
+            
+<<<<<<< HEAD
             ### display original frame, and filtered black and white frame. 
             cv.imshow('Frame', frame)
             cv.imshow('FG Mask', mask)
@@ -202,6 +273,8 @@ def pre_process(dir: str, file_name: str, stop_at: int, folder="", method="KNN",
             print(i, end="\r")
 
         keyboard = cv.waitKey(30)
+=======
+>>>>>>> 1559a9184d94e140c8fcb25ea8df4a6243b6cdd8
         if i == stop_at:
             break
     
