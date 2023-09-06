@@ -210,6 +210,9 @@ x, y, U, V = get_velocity_field(start=25, stop=26, path=path_images, fps=fps,
 #%%
 
 def mean_velocity_field(F):
+    """
+    Promediar campo de velocidades entre todos los frames.
+    """
     F_total = np.zeros_like(F[0])
     F_total_err = np.zeros_like(F[0])
     for i in tqdm(range(F[0].shape[0])):
@@ -227,9 +230,22 @@ def mean_velocity_field(F):
     return F_total, F_total_err
 
 #%%
-
+# Calcular campos de velocidades promediados
 U_total, U_total_err = mean_velocity_field(U)
 V_total, V_total_err = mean_velocity_field(V)
+
+#%%
+save_file_name = "prueba"
+
+# Guardar campos promediados como txt
+mask = np.zeros(U[0].shape, dtype=bool) ### Define the mask as an all-true matrix, bc we wont take into account the error in calculating the velocities for each frame.
+tools.save(x, y, U_total, V_total, mask, path_images+save_file_name+'.txt')
+
+# Guardar campos promediados como archivo comprimido de numpy
+np.savez_compressed(path_images+save_file_name, x=x, y=y, U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
+
+# Guardar campos por frame como archivo comprimido de numpy
+np.savez_compressed(path_images+save_file_name+" velocity_lists", Ulist=U, Vlist=V)
 
 #%%
 
@@ -247,21 +263,6 @@ n_points = 200
 x_mesh, y_mesh = np.meshgrid(np.linspace(np.min(x), np.max(x), n_points), np.linspace(np.min(y), np.max(y), n_points))
 U_grid = griddata(xy_points, U_flattened, (x_mesh, y_mesh), method="cubic")
 V_grid = griddata(xy_points, V_flattened, (x_mesh, y_mesh), method="cubic")
-
-#%%
-
-save_file_name = "prueba"
-
-
-mask = np.zeros(U[0].shape, dtype=bool) ### Define the mask as an all-true matrix, bc we wont take into account the error in calculating the velocities for each frame.
-tools.save(x, y, U_total, V_total, mask, path_images+save_file_name+'.txt')
-
-
-
-np.savez_compressed(path_images+save_file_name, x=x, y=y, U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
-
-np.savez_compressed(path_images+save_file_name+" velocity_lists", Ulist=U, Vlist=V)
-
 
 #%%
 fig, axs = plt.subplots(1, 2, figsize=(32, 16), dpi=100)
