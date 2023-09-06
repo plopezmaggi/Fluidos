@@ -1,0 +1,4 @@
+30 velocidad 3,5   x=540, y=960 r=450
+30 velocidad 4   x=530, y=850 r=460}
+
+37 velocidad 3,5   x=515, y=880 r=460

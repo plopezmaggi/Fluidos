@@ -203,7 +203,7 @@ ws = 32
 ss = 32
 ol = 20
 threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
-x, y, U, V = get_velocity_field(start=25, stop=26, path=path_images, fps=fps,
+x, y, U, V = get_velocity_field(start=10, stop=18, path=path_images, fps=fps,
                                 pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
                                 overlap=ol, threshold=threshold, replace_outliers=False)
 
@@ -267,7 +267,7 @@ V_grid = griddata(xy_points, V_flattened, (x_mesh, y_mesh), method="cubic")
 #%%
 fig, axs = plt.subplots(1, 2, figsize=(32, 16), dpi=100)
 axs[0].quiver(x_mesh, y_mesh, U_grid, V_grid, np.sqrt(U_grid**2 + V_grid**2), lw=.2)
-frame = plt.imread(path_images+"Cuadros0025.jpg") #Ver esta linea!!!
+frame = plt.imread(path_images+"Cuadros0018.jpg") #Ver esta linea!!!
 axs[0].imshow(frame, extent=[np.min(x_mesh), np.max(x_mesh), np.min(y_mesh), np.max(y_mesh)])
 axs[0].streamplot(x_mesh, y_mesh, U_grid, V_grid, density=2)
 axs[0].set_title("interpolacion y streamplot de la interpolacion para destilada lento")

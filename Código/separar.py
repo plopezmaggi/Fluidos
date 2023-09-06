@@ -140,9 +140,9 @@ def pre_process(dir: str, file_name: str, stop_at: int, folder="", method="KNN",
             
             #Recorte circular
             
-            center_x = 554  # coordenada x del centro en px
-            center_y = 929  # coordenada y del centro en px
-            radius = 450    # radio
+            center_x = 520  # coordenada x del centro en px
+            center_y = 970  # coordenada y del centro en px
+            radius = 400    # radio
             x1 = center_x - radius
             y1 = center_y - radius
             x2 = center_x + radius
@@ -170,9 +170,9 @@ def pre_process(dir: str, file_name: str, stop_at: int, folder="", method="KNN",
             
             #Corta circulo:
             
-            center_x = 554  
-            center_y = 929  
-            radius = 450   
+            center_x = 520  
+            center_y = 970  
+            radius = 40   
             x1 = center_x - radius
             y1 = center_y - radius
             x2 = center_x + radius
