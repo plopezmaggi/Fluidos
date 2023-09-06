@@ -195,7 +195,7 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
 
 #%%
 
-path_images = "Cuadros/" ### format "folder/folder/"
+path_images = "Cuadros procesados/" ### format "folder/folder/"
 fps = 59
 
 pixel2cm = 961.338 / 14.5 ### scale in pixel/cm
@@ -203,7 +203,7 @@ ws = 32
 ss = 32
 ol = 20
 threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
-x, y, U, V = get_velocity_field(start=400, stop=401, path=path_images, fps=fps,
+x, y, U, V = get_velocity_field(start=25, stop=26, path=path_images, fps=fps,
                                 pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
                                 overlap=ol, threshold=threshold, replace_outliers=False)
 
@@ -266,7 +266,7 @@ np.savez_compressed(path_images+save_file_name+" velocity_lists", Ulist=U, Vlist
 #%%
 fig, axs = plt.subplots(1, 2, figsize=(32, 16), dpi=100)
 axs[0].quiver(x_mesh, y_mesh, U_grid, V_grid, np.sqrt(U_grid**2 + V_grid**2), lw=.2)
-frame = plt.imread(path_images+"Cuadros0000.jpg")
+frame = plt.imread(path_images+"Cuadros0025.jpg") #Ver esta linea!!!
 axs[0].imshow(frame, extent=[np.min(x_mesh), np.max(x_mesh), np.min(y_mesh), np.max(y_mesh)])
 axs[0].streamplot(x_mesh, y_mesh, U_grid, V_grid, density=2)
 axs[0].set_title("interpolacion y streamplot de la interpolacion para destilada lento")
