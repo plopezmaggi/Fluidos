@@ -136,8 +136,8 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                 res3 = cv.bitwise_and(res2, res2, mask=mask)
                 
                 ### display original frame, and filtered black and white frame. 
-                cv.imshow('Frame', frame)
-                cv.imshow('FG Mask', mask)
+                #cv.imshow('Frame', frame)
+                #cv.imshow('FG Mask', mask)
                 
                 #Recorte circular
                 
@@ -166,14 +166,14 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
             else:
                 ### display original frame, and filtered frame. 
                 # Acá me muestra la imagen original y la procesada
-                cv.imshow('Frame', frame)
-                cv.imshow('FG Mask', res2)
+                #cv.imshow('Frame', frame)
+                #cv.imshow('FG Mask', res2)
                 
                 #Corta circulo:
                 
-                center_x = 554  
-                center_y = 929  
-                radius = 450   
+                center_x = 952
+                center_y = 507
+                radius = 430
                 x1 = center_x - radius
                 y1 = center_y - radius
                 x2 = center_x + radius

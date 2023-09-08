@@ -181,8 +181,8 @@ stop = max(frames)
 video = cv2.VideoCapture('video.mp4')
 fps = video.get(cv2.CAP_PROP_FPS)
 
-diametro_px = 2000000000000 # <----- CAMBIEN ESTO!!!!!!
-diametro_cm = 13.5
+diametro_px = 882 # <----- CAMBIEN ESTO!!!!!!
+diametro_cm = 12.7
 
 pixel2cm = diametro_px / diametro_cm ### scale in pixel/cm
 
@@ -191,7 +191,7 @@ ss = 32
 ol = 20
 threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
 
-x, y, U, V = get_velocity_field(start=start, stop=stop + 1, path=path_images, fps=fps,
+x, y, U, V = get_velocity_field(start=start, stop=stop, path=path_images+"/", fps=fps,
                                 pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
                                 overlap=ol, threshold=threshold, replace_outliers=False)
 
