@@ -113,14 +113,11 @@ m = np.tan(theta - np.pi / 2) # pendientes
 # La muevo hasta la posición de la partícula
 b = y_sel - m * x_sel # ordenadas al origen
 
-# F = [] # acá almacenaremos todas las rectas
-# for i in range(len(x_sel)):
-    # f = lambda X: m[i]*X + b[i] # ecuación de la recta de un solo punto
-#     F.append(f)
-
-# Buscamos los puntos de intersección entre todas las rectas
+# Listas para guardar las coordenadas (x, y) entre cada par de rectas
 X_intercept = []
 Y_intercept = []
+
+# Calcular la intersección de cada par posible de rectas
 for i in range(len(x_sel)):
     m1 = m[i]
     b1 = b[i]
@@ -132,9 +129,9 @@ for i in range(len(x_sel)):
         X_intercept.append(x_intercept)
         Y_intercept.append(y_intercept)
 
-# graficamos todas las rectas y los puntos de intersección:
+# Graficar todas las rectas y las intersecciones
 fig, ax = plt.subplots()
-X_lin = np.linspace(min_x,max_x,10) # vector de valores de x para graficar
+X_lin = np.linspace(min_x, max_x, 10) # vector de valores de x para graficar
 for i in range(len(x_sel)):
     ax.plot(X_lin, m[i]*X_lin + b[i], c='k', lw=.5, alpha=.5)
 ax.scatter(X_intercept, Y_intercept, c='r', s=5, alpha=.4, zorder=5)
