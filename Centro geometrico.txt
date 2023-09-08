@@ -1,3 +1,7 @@
+20% Velocidad 4,5 x=554 y=949 r=430
+Frames cortados: 240 a 290
+Diámetro en px de borde a borde del fluido: 973
+
 30% Velocidad 3.5      x=527 y=967 r=345
 Frames cortados: 480 a 530
 Diámetro en px de borde a borde del fluido: 882
