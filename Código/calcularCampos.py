@@ -6,17 +6,17 @@ Created on Fri Sep  1 09:15:44 2023
 @author: plopezmaggi
 """
 
-from openpiv import tools, pyprocess, validation, filters, scaling, smoothn
+from openpiv import tools, pyprocess, validation, filters, scaling
 
-import imageio
-from os import remove
 from tqdm import tqdm
 import seaborn as sns
 
 import numpy as np
-import matplotlib .pyplot as plt
+import matplotlib.pyplot as plt
 
-#%%
+import cv2
+import os
+
 def remove_velocity_outliers(u, v):
     """
     Cambiar por NaN las velocidades alejadas en módulo de la media.
@@ -37,8 +37,6 @@ def remove_velocity_outliers(u, v):
     u[Velocity_filtered], v[Velocity_filtered] = np.nan, np.nan
     
     return u, v
-
-#%%
 
 def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32, 
                       searchsize=32, overlap=16, threshold=2, replace_outliers=False):
@@ -69,26 +67,26 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
     for frame_idx in tqdm(range(start, stop, step)):
         # Definir nombre del primer frame (según cómo se lo puso cuando partió el video)
         if frame_idx < 10:
-            imagen_numero_1 = f"Cuadros000{frame_idx}.jpg"
+            imagen_numero_1 = f"000{frame_idx}.jpg"
         elif 100 > frame_idx >= 10:
-            imagen_numero_1 = f"Cuadros00{frame_idx}.jpg"
+            imagen_numero_1 = f"00{frame_idx}.jpg"
         elif 1000 > frame_idx >= 100:
-            imagen_numero_1 = f"Cuadros0{frame_idx}.jpg"
+            imagen_numero_1 = f"0{frame_idx}.jpg"
         else:
-            imagen_numero_1 = f"Cuadros{frame_idx}.jpg"
+            imagen_numero_1 = f"{frame_idx}.jpg"
         
         # El segundo frame es el siguiente al primero
         frame_idx_2 = frame_idx + 1
         
         # Definir nombre del primer frame (según cómo se lo puso cuando partió el video)
         if frame_idx_2 < 10:
-            imagen_numero_2 = f"Cuadros000{frame_idx_2}.jpg"
+            imagen_numero_2 = f"000{frame_idx_2}.jpg"
         elif 100 > frame_idx_2 >= 10:
-            imagen_numero_2 = f"Cuadros00{frame_idx_2}.jpg"
+            imagen_numero_2 = f"00{frame_idx_2}.jpg"
         elif 1000 > frame_idx_2 >= 100:
-            imagen_numero_2 = f"Cuadros0{frame_idx_2}.jpg"
+            imagen_numero_2 = f"0{frame_idx_2}.jpg"
         else:
-            imagen_numero_2 = f"Cuadros{frame_idx_2}.jpg"
+            imagen_numero_2 = f"{frame_idx_2}.jpg"
         
         print(path+imagen_numero_1)
         
@@ -148,66 +146,10 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
         ### so we have to adjust for that reflection (View plots)
         x3, y3, u3, v3 = tools.transform_coordinates(x3, y3, u3, v3)
 
-        ### Graficar cuadros 5, 15 y 25
-        if frame_idx in [5, 15, 25]:
-            fig, axs = plt.subplots(2, 2,figsize=(20, 20))
-            axs[0,0].quiver(x, y, u0, v0, 
-                    #   np.sqrt(u0**2 + v0**2), ### show intensity of the field with a colour range
-                      lw=.2, angles="xy", scale_units="xy", scale=10)
-            axs[0,0].imshow(frame_a, cmap="Greens", origin="lower")
-            axs[0,0].set_title("Calculated Velocity Field")
-            # plt.show()
-            axs[0,1].quiver(x, y, u1, v1, 
-                    #   np.sqrt(u1**2 + v1**2), ### show intensity of the field with a colour range
-                      lw=.2, angles="xy", scale_units="xy", scale=10)
-            axs[0,1].imshow(frame_a, cmap="Greens", origin="lower")
-            axs[0,1].set_title("Filtered Velocity Field")
-            # plt.show()
-            axs[1,0].quiver(x, y, u2, v2, 
-                      np.sqrt(u2**2 + v2**2), ### show intensity of the field with a colour range
-                      lw=.2, angles="xy", scale_units="xy", scale=10)
-            axs[1,0].set_title("Smoothened Velocity Field")
-            # plt.show()
-            axs[1,1].quiver(x3, y3, u3, v3, 
-                      np.sqrt(u3**2 + v3**2), ### show intensity of the field with a colour range
-                      lw=.2, angles="xy", scale_units="xy", scale=10)
-            axs[1,1].set_title("Adjusted Velocity Field")
-            plt.show()
-            
-            ### if you need more detailed look, first create a histogram of sig2noise
-            fig, axs = plt.subplots(1, 2,figsize=(20, 8))
-            axs[0].hist([s2n if (s2n != 0.0) and (s2n < 1e2) else np.nan for s2n in sig2noise.flatten()], bins=250)
-            axs[0].set_xlim(0, 10)
-            # axs[0].set_xticks(np.arange(1, 10, .5), rotation=90)
-            axs[0].grid()
-            axs[0].set_title("Histogram of the sig2noice of all the velocity vectors \n(the higher sig2noice, the better)")
-
-            s2n_filtered = [s2n if (s2n != 0.) and (s2n < 10) else np.nan for s2n in sig2noise.flatten()]
-            s2n_matrix = np.array(s2n_filtered).reshape(u1.shape)
-            sns.heatmap(s2n_matrix, linewidth=0.5, ax=axs[1])
-            axs[1].imshow(frame_a)
-            axs[1].set_title("Heat map for signal to noice ratio \n(the higher sig2noice, the better)")
-            plt.show()
-
         U.append(u3)
         V.append(v3)
+        
     return x3, y3, U, V
-
-#%%
-
-path_images = "Cuadros procesados/" ### format "folder/folder/"
-fps = 59
-
-pixel2cm = 961.338 / 14.5 ### scale in pixel/cm
-ws = 32
-ss = 32
-ol = 20
-threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
-x, y, U, V = get_velocity_field(start=10, stop=18, path=path_images, fps=fps,
-                                pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
-                                overlap=ol, threshold=threshold, replace_outliers=False)
-
-#%%
 
 def mean_velocity_field(F):
     """
@@ -229,56 +171,43 @@ def mean_velocity_field(F):
                 F_total_err[i, j] = np.std(F_list)/np.sqrt(counter)
     return F_total, F_total_err
 
-#%%
+
+path_images = "cuadros"
+
+frames = [int(nombre[:-4]) for nombre in os.listdir(path_images)]
+start = min(frames)
+stop = max(frames)
+
+video = cv2.VideoCapture('video.mp4')
+fps = video.get(cv2.CAP_PROP_FPS)
+
+diametro_px = 2000000000000 # <----- CAMBIEN ESTO!!!!!!
+diametro_cm = 13.5
+
+pixel2cm = diametro_px / diametro_cm ### scale in pixel/cm
+
+ws = 32
+ss = 32
+ol = 20
+threshold = 1.2 ### After a few iterations with different thresholds, this is the one we landed on.
+
+x, y, U, V = get_velocity_field(start=start, stop=stop + 1, path=path_images, fps=fps,
+                                pixel2cm=pixel2cm, winsize=ws, searchsize=ss,
+                                overlap=ol, threshold=threshold, replace_outliers=False)
+
 # Calcular campos de velocidades promediados
 U_total, U_total_err = mean_velocity_field(U)
 V_total, V_total_err = mean_velocity_field(V)
 
-#%%
-save_file_name = "prueba"
-
 # Guardar campos promediados como txt
 mask = np.zeros(U[0].shape, dtype=bool) ### Define the mask as an all-true matrix, bc we wont take into account the error in calculating the velocities for each frame.
-tools.save(x, y, U_total, V_total, mask, path_images+save_file_name+'.txt')
+tools.save(x, y, U_total, V_total, mask, 'pos+promedio.txt')
 
 # Guardar campos promediados como archivo comprimido de numpy
-np.savez_compressed(path_images+save_file_name, x=x, y=y, U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
+np.savez_compressed('promedio-vel', U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
+
+# Guardar posiciones como archivo comprimido de numpy
+np.savez_compressed('posiciones', x=x, y=y)
 
 # Guardar campos por frame como archivo comprimido de numpy
-np.savez_compressed(path_images+save_file_name+" velocity_lists", Ulist=U, Vlist=V)
-
-#%%
-
-from scipy.interpolate import griddata
-
-### Interpolate Total Field (U_total, V_total), generating a position meshgrid of (n_points x n_points) [x_mesh, y_mesh]
-### Generates interpolated vector fields [U_grid, V_grid]
-
-### create matrix of [x, y] points (example: np.array([[0, 10], [1, 10] ... [10, 10]]), [[0, 9], [1, 9] ... [10, 9]] ...)
-xy_points = np.concatenate([x.reshape(x.shape[0]*x.shape[1], 1), y.reshape(y.shape[0]*y.shape[1], 1)], axis=1)
-U_flattened = U_total.flatten()
-V_flattened = V_total.flatten()
-n_points = 200
-### create high density meshgrid of x,y points
-x_mesh, y_mesh = np.meshgrid(np.linspace(np.min(x), np.max(x), n_points), np.linspace(np.min(y), np.max(y), n_points))
-U_grid = griddata(xy_points, U_flattened, (x_mesh, y_mesh), method="cubic")
-V_grid = griddata(xy_points, V_flattened, (x_mesh, y_mesh), method="cubic")
-
-#%%
-fig, axs = plt.subplots(1, 2, figsize=(32, 16), dpi=100)
-axs[0].quiver(x_mesh, y_mesh, U_grid, V_grid, np.sqrt(U_grid**2 + V_grid**2), lw=.2)
-frame = plt.imread(path_images+"Cuadros0018.jpg") #Ver esta linea!!!
-axs[0].imshow(frame, extent=[np.min(x_mesh), np.max(x_mesh), np.min(y_mesh), np.max(y_mesh)])
-axs[0].streamplot(x_mesh, y_mesh, U_grid, V_grid, density=2)
-axs[0].set_title("interpolacion y streamplot de la interpolacion para destilada lento")
-
-# axs[1].streamplot(x_mesh, y_mesh, U_grid, V_grid, density=1.2, color="black")
-axs[1].imshow(frame, extent=[np.min(x_mesh), np.max(x_mesh), np.min(y_mesh), np.max(y_mesh)])
-tools.display_vector_field(path_images + save_file_name + ".txt",
-                           ax=axs[1],
-                           width=0.0035, # width is the thickness of the arrow
-                           on_img=False, # overlay on the image
-                           # image_name='__file directory for the image__'
-                        )
-axs[1].set_title("glicerina 50 rapido sin replace outliers (32, 32, 20, 1.2) 120fps")
-plt.show()
+np.savez_compressed('velocidades', Ulist=U, Vlist=V)
