@@ -1,0 +1,11 @@
+30% Velocidad 3.5      x=527 y=967 r=345
+Frames cortados: 480 a 530
+Diámetro en px de borde a borde del fluido: 882
+
+30% Velocidad4          x=529 y=969 r=345
+Frames cortados: 60 a 110
+Diámetro en px de borde a borde del fluido: 889
+
+37% Velocidad 3.5      x=931 y=520 r=345
+Frames cortados: 540 a 590
+Diámetro en px de borde a borde del fluido: 918 
