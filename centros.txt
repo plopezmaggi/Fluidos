@@ -1,3 +1,5 @@
-50 velocidad 3,5   x=507 y=964 r=400
-50 velocidad 4     x=540 y=960 r=400
-37 velocidad 4,5   x=507 y=952 r=430
+50 velocidad 4     x=540 y=960 r=400  (seg 2 o 3) frames 120 a 170 (diametro pili=893)
+50 velocidad 3,5   x=514 y=972 r=410  (seg 4 o 5) frames 240 a 290 (diametro pili=893)
+
+37 velocidad 4,5   x=952 y=507 r=430  (seg 9 o 10) frames 540 a 590 (diametro pili=893)
+37 velocidad 4     x=952 y=507 r=430  (seg 3 o 4) frames 180 a 230 (diametro pili=893)
