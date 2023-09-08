@@ -23,6 +23,8 @@ rcParams['figure.figsize'] = (12, 6)
 rcParams['figure.dpi'] = 100
 plt.style.use('seaborn-dark-palette')
 
+
+
 #%%
 
 ### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
@@ -101,20 +103,22 @@ Luego se buscan los puntos de intersección entre todo par de rectas y se calcul
 donde se determina el centro de coordenadas.
 """
 
+# Pasar a polares
+# El campo de velocidades en cartesianas es (u, v)
 theta = np.arctan(v_sel / u_sel) # ángulos que forma el vector velocidad con la horizontal
 
-# calculo las rectas de cada punto que contienen al vector posición medido desde el centro:
-m = np.tan(theta-np.pi/2) # pendientes
-b = y_sel - m*x_sel # ordenadas al origen
+# Calculo la pendiente de la recta normal a la velocidad
+m = np.tan(theta - np.pi / 2) # pendientes
+
+# La muevo hasta la posición de la partícula
+b = y_sel - m * x_sel # ordenadas al origen
 
 # F = [] # acá almacenaremos todas las rectas
 # for i in range(len(x_sel)):
-#     f = lambda X: m[i]*X + b[i] # ecuación de la recta de un solo punto
+    # f = lambda X: m[i]*X + b[i] # ecuación de la recta de un solo punto
 #     F.append(f)
 
-# Buscamos los puntos de intersección entre todas las rectas:
-
-# dónde guardaremos las coordenadas de los puntos de intersección:
+# Buscamos los puntos de intersección entre todas las rectas
 X_intercept = []
 Y_intercept = []
 for i in range(len(x_sel)):
