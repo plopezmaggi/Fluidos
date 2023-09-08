@@ -10,11 +10,11 @@ Corta un frame de un video. Asume que el video está en la carpeta que Spyder ti
 
 import cv2
 
-video = "30velocidad4estable.mp4"
+video = "video.mp4"
 
 video = cv2.VideoCapture(video)
 
-for i in range(10):
+for i in range(9*60):
     frame = video.read()[1]
 
 cv2.imwrite("cuadro.tif", frame)

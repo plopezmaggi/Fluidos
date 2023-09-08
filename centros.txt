@@ -1,2 +1,3 @@
-
-50 velocidad 4 x=540 y=960 r=400
+50 velocidad 3,5   x=507 y=964 r=400
+50 velocidad 4     x=540 y=960 r=400
+37 velocidad 4,5   x=507 y=952 r=430
