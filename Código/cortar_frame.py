@@ -14,7 +14,7 @@ video = "video.mp4"
 
 video = cv2.VideoCapture(video)
 
-for i in range(9*60):
+for i in range(10):
     frame = video.read()[1]
 
 cv2.imwrite("cuadro.tif", frame)

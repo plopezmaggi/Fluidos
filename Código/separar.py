@@ -171,8 +171,8 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                 
                 #Corta circulo:
                 
-                center_x = 952
-                center_y = 507
+                center_x = 554
+                center_y = 949
                 radius = 430
                 x1 = center_x - radius
                 y1 = center_y - radius

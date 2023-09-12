@@ -181,7 +181,7 @@ stop = max(frames)
 video = cv2.VideoCapture('video.mp4')
 fps = video.get(cv2.CAP_PROP_FPS)
 
-diametro_px = 882 # <----- CAMBIEN ESTO!!!!!!
+diametro_px = 973 # <----- CAMBIEN ESTO!!!!!!
 diametro_cm = 12.7
 
 pixel2cm = diametro_px / diametro_cm ### scale in pixel/cm
