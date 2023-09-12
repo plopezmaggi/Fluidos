@@ -26,7 +26,7 @@ plt.style.use('seaborn-dark-palette')
 #%%
 
 ### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
-video = '20v4-5/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
+video = '50v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
 
 # Abrir campo de velocidades promediado (el que se guarda en procesamiento.py)
 datosPosiciones = np.load(video + 'posiciones.npz')
@@ -51,7 +51,7 @@ fig, ax = plt.subplots(1,1, figsize=(8,8))
 Q = ax.quiver(x,y,u,v, color=C)
 
 # Seleccionamos los puntos que utilizaremos para calcular el centro (filtramos con un mínimo de velocidad)
-v_threshold = 2.5 # <---- MIRAR QUÉ CONVIENE PONER ACÁ
+v_threshold = 1 #<---- MIRAR QUÉ CONVIENE PONER ACÁ
 
 idx = np.array([i for i in range(len(x)) if (u[i]**2 + v[i]**2) > v_threshold**2])
 
@@ -217,6 +217,7 @@ plt.show()
 
 
 #PERTENECE AL CÓDIGO ANTERIOR, lo dejo acá abajo por las dudas
+#Aca se ve el ajuste con todos los puntos dispersos sin promediar
 
 # Modelos de vórtice
 def rankine(r, Omega, c):
