@@ -26,7 +26,7 @@ plt.style.use('seaborn-dark-palette')
 #%%
 
 ### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
-video = '37v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
+video = '20v4-5/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
 
 # Abrir campo de velocidades promediado (el que se guarda en procesamiento.py)
 datosPosiciones = np.load(video + 'posiciones.npz')
@@ -127,6 +127,9 @@ err_y_centro = np.std(Y_intercept)
 fig, ax = plt.subplots(figsize=(8,8))
 ax.quiver(x,y,u,v, color=C)
 ax.scatter(x_centro, y_centro, c='r')
+plt.xlabel('Distancia [cm]')
+plt.ylabel('Distancia [cm]')
+#plt.savefig('campovel.png')
 plt.show()
 
 #%%
@@ -155,6 +158,65 @@ th = np.arctan(y_filtrado / x_filtrado)
 # Calculo velocidad tangencial
 beta = np.arccos((u_filtrado * x_filtrado + v_filtrado * y_filtrado) / (r * np.sqrt(u_filtrado**2 + v_filtrado**2)))
 vt = np.sqrt(u_filtrado**2 + v_filtrado**2) * np.cos(np.pi / 2 - beta)
+
+# Modelos de vórtice
+def rankine(r, Omega, c):
+    return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
+
+def burgers(r, Omega, c):
+    return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
+
+#Todo lo que viene a partir de ahora es para que promedie los datos
+#Hasta le agregó el error, chequear!!!
+
+# Número de bins para dividir los datos radiales
+num_bins = 20
+
+# Calcular el radio para cada punto
+r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
+
+# Calcular el histograma radial
+hist, bin_edges = np.histogram(r_points, bins=num_bins)
+
+# Calcular el promedio de las velocidades tangenciales en cada bin
+vt_avg = np.zeros(num_bins)
+bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+
+for i in range(num_bins):
+    mask = (r_points >= bin_edges[i]) & (r_points < bin_edges[i + 1])
+    vt_avg[i] = np.mean(vt[mask])
+
+# Ajustar y graficar
+popt, pcov = curve_fit(burgers, bin_centers, vt_avg, absolute_sigma=True) # Agregue sigma si tiene datos de error
+
+graf = np.linspace(np.min(bin_centers), np.max(bin_centers), 1000)
+
+plt.figure()
+plt.plot(graf, burgers(graf, *popt))
+plt.errorbar(bin_centers, vt_avg, yerr=np.std(vt[mask]), fmt='o', label='Datos Promediados')
+plt.xlabel('Distancia al centro del vórtice [cm]')
+plt.ylabel('Velocidad Tangencial [cm/s]')
+plt.legend()
+plt.show()
+
+#%%
+
+#Por si queremos graficar sólo los datos, sin el ajuste =
+
+plt.figure()
+plt.errorbar(bin_centers, vt_avg, yerr=np.std(vt[mask]), fmt='o')
+plt.xlabel('Distancia al centro del vórtice [cm]')
+plt.ylabel('Velocidad Tangencial [cm/s]')
+plt.grid()
+#plt.savefig('velocidadtang.png')
+plt.show()
+
+
+
+#%%
+
+
+#PERTENECE AL CÓDIGO ANTERIOR, lo dejo acá abajo por las dudas
 
 # Modelos de vórtice
 def rankine(r, Omega, c):
