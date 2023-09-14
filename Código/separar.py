@@ -226,7 +226,7 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     
                     x1, x2 = x, x + horizontal
                     y1, y2 = y, y + vertical
-                    #y1, y2 = y - vertical, y
+
                     
                     cv.rectangle(mask, esquina, (x2, y2), (255, 255, 255), thickness=-1)
                     cropped_image = cv.bitwise_and(res2, mask)

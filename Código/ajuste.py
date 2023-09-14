@@ -16,42 +16,44 @@ from matplotlib import rcParams  # Para aumentar la resolución de los gráficos
 import seaborn as sns
 from matplotlib.colors import LogNorm
 import pandas as pd
-# %config InlineBackend.figure_format='retina'
+%config InlineBackend.figure_format='retina'
 rcParams['font.family'] = 'serif'
 rcParams["font.size"] = 16
 rcParams['figure.figsize'] = (12, 6)
 rcParams['figure.dpi'] = 100
-plt.style.use('seaborn-dark-palette')
+plt.style.use('seaborn-v0_8-poster')
+
+#%%
+# Videos
+velocidades = ['3-5', '4', '4-5']
+fluidos = [30, 37, 50]
 
 #%%
 
-### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
-video = '50v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
 
-# Abrir campo de velocidades promediado (el que se guarda en procesamiento.py)
+### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
+video = '37v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
+
+# Abrir campo de velocidades promediado (el que se guarda en calcularCampos.py)
 datosPosiciones = np.load(video + 'posiciones.npz')
 datosVel = np.load(video + 'promedio-vel.npz')
 
-# Definimos las coordenadas y las velocidades
-x = datosPosiciones['x'].reshape(datosPosiciones['x'].shape[0] * datosPosiciones['x'].shape[1])
-y = datosPosiciones['y'].reshape(datosPosiciones['y'].shape[0] * datosPosiciones['y'].shape[1])
-u = datosVel['U'].reshape(datosVel['U'].shape[0] * datosVel['U'].shape[1])
-v = datosVel['V'].reshape(datosVel['V'].shape[0] * datosVel['V'].shape[1])
-err_u = datosVel['Uerr'].reshape(datosVel['Uerr'].shape[0] * datosVel['Uerr'].shape[1])
-err_v = datosVel['Verr'].reshape(datosVel['Verr'].shape[0] * datosVel['Verr'].shape[1])
+x, y, u, v, err_u, err_v = datosPosiciones['x'], datosPosiciones['y'], datosVel['U'], datosVel['V'], datosVel['Uerr'], datosVel['Verr']
 
 #%%
 
 # Gráfico del campo de velocidades
 color = np.hypot(u, v)
 color = (color - min(color)) / (max(color) - min(color))
-C = plt.cm.Blues(color)
+C = plt.cm.plasma(color)
+
+#%%
 
 fig, ax = plt.subplots(1,1, figsize=(8,8))
 Q = ax.quiver(x,y,u,v, color=C)
 
 # Seleccionamos los puntos que utilizaremos para calcular el centro (filtramos con un mínimo de velocidad)
-v_threshold = 1 #<---- MIRAR QUÉ CONVIENE PONER ACÁ
+v_threshold = 0 #<---- MIRAR QUÉ CONVIENE PONER ACÁ
 
 idx = np.array([i for i in range(len(x)) if (u[i]**2 + v[i]**2) > v_threshold**2])
 
@@ -124,9 +126,11 @@ y_centro = np.mean(Y_intercept)
 err_x_centro = np.std(X_intercept)
 err_y_centro = np.std(Y_intercept)
 
+#%%
 fig, ax = plt.subplots(figsize=(8,8))
+ax.imshow(plt.imread(video + 'cuadros/0544.jpg'), extent = [min(x), max(x), min(y), max(y)])
 ax.quiver(x,y,u,v, color=C)
-ax.scatter(x_centro, y_centro, c='r')
+# ax.scatter(x_centro, y_centro, c='r')
 plt.xlabel('Distancia [cm]')
 plt.ylabel('Distancia [cm]')
 #plt.savefig('campovel.png')
@@ -170,7 +174,7 @@ def burgers(r, Omega, c):
 #Hasta le agregó el error, chequear!!!
 
 # Número de bins para dividir los datos radiales
-num_bins = 20
+num_bins = 45
 
 # Calcular el radio para cada punto
 r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
