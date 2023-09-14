@@ -24,21 +24,21 @@ rcParams['figure.dpi'] = 100
 plt.style.use('seaborn-dark-palette')
 
 #%%
+# Videos
+velocidades = ['3-5', '4', '4-5']
+fluidos = [30, 37, 50]
+
+#%%
+
 
 ### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
-video = '50v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
+video = '37v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
 
-# Abrir campo de velocidades promediado (el que se guarda en procesamiento.py)
+# Abrir campo de velocidades promediado (el que se guarda en calcularCampos.py)
 datosPosiciones = np.load(video + 'posiciones.npz')
 datosVel = np.load(video + 'promedio-vel.npz')
 
-# Definimos las coordenadas y las velocidades
-x = datosPosiciones['x'].reshape(datosPosiciones['x'].shape[0] * datosPosiciones['x'].shape[1])
-y = datosPosiciones['y'].reshape(datosPosiciones['y'].shape[0] * datosPosiciones['y'].shape[1])
-u = datosVel['U'].reshape(datosVel['U'].shape[0] * datosVel['U'].shape[1])
-v = datosVel['V'].reshape(datosVel['V'].shape[0] * datosVel['V'].shape[1])
-err_u = datosVel['Uerr'].reshape(datosVel['Uerr'].shape[0] * datosVel['Uerr'].shape[1])
-err_v = datosVel['Verr'].reshape(datosVel['Verr'].shape[0] * datosVel['Verr'].shape[1])
+x, y, u, v, err_u, err_v = datosPosiciones['x'], datosPosiciones['y'], datosVel['U'], datosVel['V'], datosVel['Uerr'], datosVel['Verr']
 
 #%%
 

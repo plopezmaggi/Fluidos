@@ -203,6 +203,15 @@ V_total, V_total_err = mean_velocity_field(V)
 mask = np.zeros(U[0].shape, dtype=bool) ### Define the mask as an all-true matrix, bc we wont take into account the error in calculating the velocities for each frame.
 tools.save(x, y, U_total, V_total, mask, 'pos+promedio.txt')
 
+
+x = x.reshape(x.shape[0] * x.shape[1])
+y = y.reshape(y.shape[0] * y.shape[1])
+U_total = U_total.reshape(U_total.shape[0] * U_total.shape[1])
+V_total = V_total.reshape(V_total.shape[0] * V_total.shape[1])
+U_total_err = U_total_err.reshape(U_total_err.shape[0] * U_total_err.shape[1])
+V_total_err = V_total_err.reshape(V_total_err.shape[0] * V_total_err.shape[1])
+
+
 # Guardar campos promediados como archivo comprimido de numpy
 np.savez_compressed('promedio-vel', U=U_total, V=V_total, Uerr=U_total_err, Verr=V_total_err)
 
