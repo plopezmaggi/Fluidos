@@ -1,0 +1,7 @@
+Para recipientes cuadrado y rectangular informo, equina superior izq, ancho y alto
+
+cuadrado3-5   esqx=369, esqy=79    lado=919                    frames 420 a 480 (ancho pili 997 )
+
+rectangulo3-5 esqx:115 esqy=49     ancho=863    alto:1793      frames 0 a 60 (ancho pili 904) 
+rectangulo4   esqx=115 esqy=49     ancho=863    alto=1793      frames 60 a 120 (ancho pili 904)
+rectangulo4-5   esqx=115 esqy=49     ancho=863    alto=1793      frames 30 a 50 (ancho pili 904)
