@@ -26,7 +26,7 @@ plt.style.use('seaborn-v0_8-poster')
 
 def calcularCentro(datos, porcentaje=1.0, GRAFICAR=False):
     # Tirar velocidades nulas
-    datos = np.array([dato for dato in datos if dato[2]**2 + dato[3]**2 > 0])
+    datos = np .array([dato for dato in datos if dato[2]**2 + dato[3]**2 > 0])
     
     # Cantidad de puntos para usar
     n = int(len(datos) * porcentaje)
@@ -104,7 +104,7 @@ def cmap(u, v, colormap):
     color = (color - min(color)) / (max(color) - min(color))
     return cm[colormap](color)
 
-def graficoTangencial
+
 
 
 #%%
@@ -115,7 +115,7 @@ fluidos = [30, 37, 50]
 #%%
 
 ### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
-video = '37v3-5e/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
+video = 'cuad3-5/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
 
 datos = cargarDatos(video)
 
@@ -134,8 +134,8 @@ for vel in velocidades:
 #%%
 plt.close('all')
 plt.figure(figsize=(8,8))
-plt.imshow(plt.imread(video + 'cuadros/0544.jpg'), extent = [min(datos[:, 0]), max(datos[:, 0]), min(datos[:, 1]), max(datos[:, 1])])
-plt.quiver(datos[:, 0], datos[:, 1], datos[:, 2], datos[:, 3], color=C, alpha=0.7)
+plt.imshow(plt.imread(video + 'cuadros/0430.jpg'), extent = [min(datos[:, 0]), max(datos[:, 0]), min(datos[:, 1]), max(datos[:, 1])])
+plt.quiver(datos[:, 0], datos[:, 1], datos[:, 2], datos[:, 3], color="red", alpha=0.7)
 
 plt.scatter([x_v], [y_v], label = "Filtrados")
 # plt.scatter([x2], [y2], label="Sin filtrar")
