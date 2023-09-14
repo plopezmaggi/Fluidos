@@ -225,7 +225,7 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     x, y = esquina
                     
                     x1, x2 = x, x + horizontal
-                    y1, y2 = y - vertical, y
+                    y1, y2 = y, y + vertical
                     
                     cropped_image = cropped_image[y1:y2, x1:x2]
                 
