@@ -25,15 +25,18 @@ plt.style.use('seaborn-v0_8-poster')
 #%%
 
 def calcularCentro(datos, porcentaje=1.0, GRAFICAR=False):
+    print(datos.shape)
     # Tirar velocidades nulas
     datos = np .array([dato for dato in datos if dato[2]**2 + dato[3]**2 > 0])
     
+    print(datos.shape)
     # Cantidad de puntos para usar
     n = int(len(datos) * porcentaje)
     
     # Ordenar según el módulo de la velocidad y quedarnos con las más altas
     ordenados = np.array(sorted(datos, key=lambda row : row[2]**2 + row[3]**2, reverse=True))[:n]
     
+    print(ordenados.shape)
     x, y, u, v, err_u, err_v = ordenados.T
     
     # Pasar a polares
@@ -95,6 +98,7 @@ def cargarDatos(video):
 
     x, y, u, v, err_u, err_v = datosPosiciones['x'], datosPosiciones['y'], datosVel['U'], datosVel['V'], datosVel['Uerr'], datosVel['Verr']
     
+    print(x.shape)
     datos = np.column_stack((x, y, u, v, err_u, err_v))
     
     return datos
@@ -104,6 +108,55 @@ def cmap(u, v, colormap):
     color = (color - min(color)) / (max(color) - min(color))
     return cm[colormap](color)
 
+def burgers(r, Omega, c):
+    return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
+
+def velTangencial(datos, centro):
+    x, y, u, v, err_u, err_v = datos.T
+    
+    # Cambio el origen
+    x_desplazado, y_desplazado = x - centro[0], y - centro[1]
+
+    # Tiro las velocidades nulas
+    x_filtrado = x_desplazado[x_desplazado != 0]
+    y_filtrado = y_desplazado[x_desplazado != 0]
+    u_filtrado = u_sel[x_desplazado != 0]
+    v_filtrado = v_sel[x_desplazado != 0]
+
+    # Paso a polares
+    r = np.sqrt(x_filtrado**2 + y_filtrado**2)
+    th = np.arctan(y_filtrado / x_filtrado)
+
+    # Calculo velocidad tangencial
+    beta = np.arccos((u_filtrado * x_filtrado + v_filtrado * y_filtrado) / (r * np.sqrt(u_filtrado**2 + v_filtrado**2)))
+    vt = np.sqrt(u_filtrado**2 + v_filtrado**2) * np.cos(np.pi / 2 - beta)
+
+    #Todo lo que viene a partir de ahora es para que promedie los datos
+    #Hasta le agregó el error, chequear!!!
+
+    # Número de bins para dividir los datos radiales
+    num_bins = 45
+
+    # Calcular el radio para cada punto
+    r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
+
+    # Calcular el histograma radial
+    hist, bin_edges = np.histogram(r_points, bins=num_bins)
+
+    # Calcular el promedio de las velocidades tangenciales en cada bin
+    vt_avg = np.zeros(num_bins)
+    vt_err = np.zeros(num_bins)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+
+    for i in range(num_bins):
+        mask = (r_points >= bin_edges[i]) & (r_points < bin_edges[i + 1])
+        
+        seleccionados = vt[mask]
+        
+        vt_avg[i] = np.mean(seleccionados)
+        vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados))
+    
+    return bin_centers, vt_avg, vt_err
 
 
 
@@ -123,13 +176,32 @@ centroTot, c = calcularCentro(datos)
 centroFiltrado, c = calcularCentro(datos, 0.05)
 #%%
 
+def burgers(r, Omega, c):
+    return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
+
 # Comparo todas las velocidades para un mismo fluido
-fluido = 30
-for vel in velocidades:
-    video = f"{fluido}v{vel}e/"
+for fluido in fluidos:   
+    fig, ax = plt.subplots()
     
-    if not os.path.isdir(video):
-        continue
+    fig.set_title(f"GLicerina {fluido}%")
+    
+    for vel in velocidades:
+        video = f"{fluido}v{vel}e/"
+        
+        if not os.path.isdir(video):
+            continue
+        
+        # Abrir datos
+        datos = cargarDatos(video)
+        
+        # Calcular centro
+        centro = calcularCentro(datos, porcentaje=0.05)
+        
+        # Calcular velocidad tangencial
+        r, vt, err_vt = velTangencial(datos, centro)
+        
+        # Graficar
+        ax.errorbar(r, vt, yerr=err_vt)
     
 #%%
 plt.close('all')
@@ -243,9 +315,6 @@ plt.show()
 # Modelos de vórtice
 def rankine(r, Omega, c):
     return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
-
-def burgers(r, Omega, c):
-    return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
 
 # Ajusto con Burgers y grafico
 popt, pcov = curve_fit(burgers, r, vt, absolute_sigma=True) # <---- FALTA AGREGAR SIGMA
