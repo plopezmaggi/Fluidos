@@ -46,7 +46,7 @@ def video2images(video_path, images_path):
 #%%
 """ Esto hace lo mismo (partir en frames) pero además procesa las imágenes para mejorar el contraste """
      
-def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder="", method="KNN", filter_color=False):
+def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder="", method="KNN", filter_color=False, circulo=None, rectangulo=None):
     """ Process each individual frame of a video, generating a high contrast set of frames.
     It removes the background and light reflections on the surface of the fluid, with an optional
     feature of removing the color.
@@ -65,6 +65,12 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
     filter_color : boolian
         whether to apply a color filter on top of the background subtraction. Default: False. 
         NOTE: In order for the color filter to work, you have to adjust the color parameters (lower_color, upper_color).
+        
+    circulo
+        Para recortar con forma de círculo, poner pasarle una tupla ((centro_x, centro_y), radio)
+    
+    rectangulo
+        Para recortar con forma de rectángulo, pasarle una tupla ((esquina_superior_izquierda_x, esquina_superior_izquierda_y), lado_horizontal, lado_vertical)
     """
     
     ### Choosing method selected for the background substractor object
@@ -109,8 +115,7 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
             mask = cv.threshold(gray, 220, 255, cv.THRESH_BINARY)[1]
             res2 = cv.inpaint(res1, mask, 21, cv.INPAINT_TELEA) 
     
-            #Genera el nombre del archivo para la imagen procesada
-    
+            # Genera el nombre del archivo para la imagen procesada
             if i < 10:
                 imagen_numero = f"000{i}.jpg"
             elif 100 > i >= 10:
@@ -139,29 +144,49 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                 #cv.imshow('Frame', frame)
                 #cv.imshow('FG Mask', mask)
                 
-                #Recorte circular
-                
-                center_x = 554  # coordenada x del centro en px
-                center_y = 929  # coordenada y del centro en px
-                radius = 450    # radio
-                x1 = center_x - radius
-                y1 = center_y - radius
-                x2 = center_x + radius
-                y2 = center_y + radius
-                x1 = max(x1, 0)
-                y1 = max(y1, 0)
-                
-                
                 mask = np.zeros_like(res3)
-                cv.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)  
                 
                 cropped_image = cv.bitwise_and(res3, mask)
                 
-                cropped_image = cropped_image[y1:y2, x1:x2]
-    
-                ### Save file
-                cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
-                i += 1
+                # Recorte con círculo
+                if circulo is not None:
+                    centro, radius = circulo
+                    center_x, center_y = centro
+                    
+                    # Recorte circular
+                    center_x = 554  # coordenada x del centro en px
+                    center_y = 929  # coordenada y del centro en px
+                    radius = 450    # radio
+                    x1 = center_x - radius
+                    y1 = center_y - radius
+                    x2 = center_x + radius
+                    y2 = center_y + radius
+                    x1 = max(x1, 0)
+                    y1 = max(y1, 0)
+                    
+                    cropped_image = cropped_image[y1:y2, x1:x2]
+        
+                    ### Save file
+                    cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
+                
+                # Recorte con rectángulo
+                elif rectangulo is not None:
+                    esquina, horizontal, vertical = rectangulo
+                    x, y = esquina
+                    
+                    x1, x2 = x, x + horizontal
+                    y1, y2 = y - vertical, y
+                    
+                    cropped_image = cropped_image[y1:y2, x1:x2]
+                    
+                    ### Save file
+                    cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
+                
+                # Sin recorte
+                else:
+                    ### Save file
+                    cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
+                    
     
             else:
                 ### display original frame, and filtered frame. 
@@ -169,29 +194,41 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                 #cv.imshow('Frame', frame)
                 #cv.imshow('FG Mask', res2)
                 
-                #Corta circulo:
-                
-                center_x = 554
-                center_y = 949
-                radius = 430
-                x1 = center_x - radius
-                y1 = center_y - radius
-                x2 = center_x + radius
-                y2 = center_y + radius
-                x1 = max(x1, 0)
-                y1 = max(y1, 0)
-                
                 
                 mask = np.zeros_like(res2)
-                cv.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)  
-                
                 
                 cropped_image = cv.bitwise_and(res2, mask)
                 
                 
-                cropped_image = cropped_image[y1:y2, x1:x2]
-            
-            
+                # Recorte con círculo
+                if circulo is not None:
+                    centro, radius = circulo
+                    center_x, center_y = centro
+                    
+                    # Recorte circular
+                    center_x = 554  # coordenada x del centro en px
+                    center_y = 929  # coordenada y del centro en px
+                    radius = 450    # radio
+                    x1 = center_x - radius
+                    y1 = center_y - radius
+                    x2 = center_x + radius
+                    y2 = center_y + radius
+                    x1 = max(x1, 0)
+                    y1 = max(y1, 0)
+                    
+                    cropped_image = cropped_image[y1:y2, x1:x2]
+        
+                
+                # Recorte con rectángulo
+                elif rectangulo is not None:
+                    esquina, horizontal, vertical = rectangulo
+                    x, y = esquina
+                    
+                    x1, x2 = x, x + horizontal
+                    y1, y2 = y - vertical, y
+                    
+                    cropped_image = cropped_image[y1:y2, x1:x2]
+                
                 ### Save file
                 cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
                 
