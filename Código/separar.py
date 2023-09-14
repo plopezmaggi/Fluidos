@@ -225,10 +225,15 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     x, y = esquina
                     
                     x1, x2 = x, x + horizontal
-                    y1, y2 = y - vertical, y
+                    y1, y2 = y, y + vertical
+                    #y1, y2 = y - vertical, y
                     
+                    cv.rectangle(mask, esquina, (x2, y2), (255, 255, 255), thickness=-1)
+                    cropped_image = cv.bitwise_and(res2, mask)
                     cropped_image = cropped_image[y1:y2, x1:x2]
-                
+                    
+                    print(x1, x2, y1, y2)
+                    print(cropped_image)
                 ### Save file
                 cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
                 
