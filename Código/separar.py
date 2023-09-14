@@ -164,10 +164,9 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     x1 = max(x1, 0)
                     y1 = max(y1, 0)
                     
+                    cv.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)
+                    cropped_image = cv.bitwise_and(res2, mask)
                     cropped_image = cropped_image[y1:y2, x1:x2]
-        
-                    ### Save file
-                    cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
                 
                 # Recorte con rectángulo
                 elif rectangulo is not None:
@@ -177,15 +176,12 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     x1, x2 = x, x + horizontal
                     y1, y2 = y - vertical, y
                     
+                    cv.rectangle(mask, esquina, (x2, y2), (255, 255, 255), thickness=-1)
+                    cropped_image = cv.bitwise_and(res2, mask)
                     cropped_image = cropped_image[y1:y2, x1:x2]
                     
-                    ### Save file
-                    cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
-                
-                # Sin recorte
-                else:
-                    ### Save file
-                    cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
+                ### Save file
+                cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
                     
     
             else:
@@ -215,7 +211,8 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     y2 = center_y + radius
                     x1 = max(x1, 0)
                     y1 = max(y1, 0)
-                    
+                    cv.circle(mask, (center_x, center_y), radius, (255, 255, 255), thickness=-1)
+                    cropped_image = cv.bitwise_and(res2, mask)
                     cropped_image = cropped_image[y1:y2, x1:x2]
         
                 
@@ -232,8 +229,6 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     cropped_image = cv.bitwise_and(res2, mask)
                     cropped_image = cropped_image[y1:y2, x1:x2]
                     
-                    print(x1, x2, y1, y2)
-                    print(cropped_image)
                 ### Save file
                 cv.imwrite(dir+"/"+folder+"/"+imagen_numero,cropped_image)
                 
