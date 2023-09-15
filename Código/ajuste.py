@@ -87,7 +87,7 @@ def calcularCentro(datos, porcentaje=1.0, GRAFICAR=False):
     err_x_centro = np.std(X_intercept)
     err_y_centro = np.std(Y_intercept)
     
-    return (x_centro, y_centro), (err_x_centro, err_y_centro)
+    return [(x_centro, y_centro), (err_x_centro, err_y_centro)]
 
 def cargarDatos(video):
     # Abrir posiciones
@@ -141,7 +141,7 @@ def velTangencial(datos, centro):
     #Hasta le agregó el error, chequear!!!
 
     # Número de bins para dividir los datos radiales
-    num_bins = 40
+    num_bins = 15
 
     # Calcular el radio para cada punto
     r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -163,34 +163,23 @@ def velTangencial(datos, centro):
         vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0
 
 
-    vt = vt_avg
-    r = bin_centers
-    inicio = 0
 
-    popt, pcov = curve_fit(burgers, r, vt, sigma = vt_err, absolute_sigma = True)
+    popt, pcov = curve_fit(burgers, bin_centers, vt_avg, sigma = vt_err, absolute_sigma = True)
     
-    return bin_centers, vt_avg, vt_err, popt, pcov
+    # return bin_centers, vt_avg, vt_err, popt, pcov
+    return r, vt, vt_err, popt, pcov
 
 #%%
+
+"""
+Loop sobre todos los videos (no lo usamos)
+"""
+plt.close('all')
+
 # Videos
 velocidades = ['3-5', '4', '4-5']
 fluidos = [30, 37, 50]
 
-#%%
-
-### Primero cargamos los datos y metemos las coordenadas y las velocidades en una lista.
-video = 'cuad3-5/' # <----- ACÁ VA EL VIDEO PARA ANALIZAR
-
-datos = cargarDatos(video)
-
-centroTot, c = calcularCentro(datos)
-centroFiltrado, c = calcularCentro(datos, 0.05)
-#%%
-plt.close('all')
-def burgers(r, Omega, c):
-    return Omega * (1 - np.exp(-r**2 / c**2)) / r
-
-fluidos = [37]
 # Comparo todas las velocidades para un mismo fluido
 for fluido in fluidos:   
     fig, ax = plt.subplots()
@@ -225,6 +214,9 @@ for fluido in fluidos:
     ax.legend()
     
 #%%
+"""
+Comparación para v3
+"""
 plt.close('all')
 datos = cargarDatos('30v3/')
 
@@ -277,185 +269,42 @@ ax.plot(graf50, burgers(graf50, *popt50))
 # ax.plot(x, y, ".")
 ax.legend()
 
-#%%
-plt.close('all')
-datos = cargarDatos('30v3/')
-
-centro, error = calcularCentro(datos, porcentaje=0.02)
-# centro = (5.89, 5.93) 50v3
-centro = (5.5, 5.4)
-plt.figure(figsize=(8,8))
-x, y, u, v, u_err, v_err = datos.T
-plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
-plt.scatter(centro[0], centro[1])
-plt.show()
-
-
-r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
-minvel = 1.5
-
-r = r[vt >= minvel]
-err_vt = err_vt[vt>=minvel]
-vt = vt[vt>=minvel]
-
-graf = np.linspace(min(r), max(r), 1000)
-
-fig, ax = plt.subplots()
-ax.plot(r, vt, ".", label = "Glicerina 30%")
-ax.plot(graf, burgers(graf, *popt))
-
-datos50 = cargarDatos('50v3/')
-
-centro50, error50 = calcularCentro(datos50, porcentaje=0.02)
-centro50 = (5.89, 5.93)
-plt.figure(figsize=(8,8))
-x50, y50, u50, v50, u_err50, v_err50 = datos50.T
-plt.quiver(x50, y50, u50, v50, color=cmap(u50, v50, 'plasma'))
-plt.scatter(centro50[0], centro50[1])
-plt.show()
-
-
-r50, vt50, err_vt50, popt50, pcov50 = velTangencial(datos50, centro50)
-
-minvel50 = 1.5
-
-r50 = r50[vt50 >= minvel50]
-err_vt50 = err_vt50[vt50>=minvel50]
-vt50 = vt50[vt50>=minvel50]
-
-graf50 = np.linspace(min(r50), max(r50), 1000)
-# Graficar
-ax.plot(r50, vt50, ".", label = "Glicerina 50%")
-ax.plot(graf50, burgers(graf50, *popt50))
-# ax.plot(x, y, ".")
-ax.legend()
 
 #%%
-plt.close('all')
-plt.figure(figsize=(8,8))
-plt.imshow(plt.imread(video + 'cuadros/0430.jpg'), extent = [min(datos[:, 0]), max(datos[:, 0]), min(datos[:, 1]), max(datos[:, 1])])
-plt.quiver(datos[:, 0], datos[:, 1], datos[:, 2], datos[:, 3], color="red", alpha=0.7)
 
-plt.scatter([x_v], [y_v], label = "Filtrados")
-# plt.scatter([x2], [y2], label="Sin filtrar")
-# plt.legend()
+videos = ['30v4e/', '30v3/', '30v3-5e/']
 
+datos = {video : cargarDatos(video) for video in videos}
 
-#%%
-C = cmap(datos[:, 2], datos[:, 3], 'plasma')
+centros = {video : calcularCentro(datos[video], porcentaje=0.05) for video in videos}
+centros['30v4e/'][0] = (5.53, 4.88)
+centros['30v3/'][0] = (5.5, 5.37)
+centros['30v3-5e/'][0] = (5.38, 4.8)
 
-fig, ax = plt.subplots(figsize=(8,8))
-ax.imshow(plt.imread(video + 'cuadros/0544.jpg'), extent = [min(x), max(x), min(y), max(y)])
-ax.quiver(x,y,u,v, color=C)
-# ax.scatter(x_centro, y_centro, c='r')
-plt.xlabel('Distancia [cm]')
-plt.ylabel('Distancia [cm]')
-plt.show()
+tangencial = {video : velTangencial(datos[video], centros[video][0]) for video in videos}
 
 #%%
-"""
-Ajustamos la velocidad tangencial en función del radio con ambos modelos.
 
-El threshold que elegimos más arriba corta los puntos con menor velocidad,
-así que elimina la zona donde se ven los efectos de borde
-(esto se nota si ponemos un threshold muy chico, el modelo deja de ajustar).
-"""
 plt.close('all')
 
-# Cambio el origen
-x_desplazado, y_desplazado = x_sel - x_centro, y_sel - y_centro
+figAjuste, axAjuste = plt.subplots()
 
-# Me quedo con el semiespacio de y > 0 (porque si no el cálculo de theta no es inyectivo)
-x_filtrado = x_desplazado[x_desplazado != 0]
-y_filtrado = y_desplazado[x_desplazado != 0]
-u_filtrado = u_sel[x_desplazado != 0]
-v_filtrado = v_sel[x_desplazado != 0]
-
-# Paso a polares
-r = np.sqrt(x_filtrado**2 + y_filtrado**2)
-th = np.arctan(y_filtrado / x_filtrado)
-
-# Calculo velocidad tangencial
-beta = np.arccos((u_filtrado * x_filtrado + v_filtrado * y_filtrado) / (r * np.sqrt(u_filtrado**2 + v_filtrado**2)))
-vt = np.sqrt(u_filtrado**2 + v_filtrado**2) * np.cos(np.pi / 2 - beta)
-
-# Modelos de vórtice
-def rankine(r, Omega, c):
-    return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
-
-def burgers(r, Omega, c):
-    return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
-
-#Todo lo que viene a partir de ahora es para que promedie los datos
-#Hasta le agregó el error, chequear!!!
-
-# Número de bins para dividir los datos radiales
-num_bins = 45
-
-# Calcular el radio para cada punto
-r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
-
-# Calcular el histograma radial
-hist, bin_edges = np.histogram(r_points, bins=num_bins)
-
-# Calcular el promedio de las velocidades tangenciales en cada bin
-vt_avg = np.zeros(num_bins)
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
-
-for i in range(num_bins):
-    mask = (r_points >= bin_edges[i]) & (r_points < bin_edges[i + 1])
-    vt_avg[i] = np.mean(vt[mask])
-
-# Ajustar y graficar
-popt, pcov = curve_fit(burgers, bin_centers, vt_avg, absolute_sigma=True) # Agregue sigma si tiene datos de error
-
-graf = np.linspace(np.min(bin_centers), np.max(bin_centers), 1000)
-
-plt.figure()
-plt.plot(graf, burgers(graf, *popt))
-plt.errorbar(bin_centers, vt_avg, yerr=np.std(vt[mask]), fmt='o', label='Datos Promediados')
-plt.xlabel('Distancia al centro del vórtice [cm]')
-plt.ylabel('Velocidad Tangencial [cm/s]')
-plt.legend()
-plt.show()
-
-#%%
-
-#Por si queremos graficar sólo los datos, sin el ajuste =
-
-plt.figure()
-plt.errorbar(bin_centers, vt_avg, yerr=np.std(vt[mask]), fmt='o')
-plt.xlabel('Distancia al centro del vórtice [cm]')
-plt.ylabel('Velocidad Tangencial [cm/s]')
-plt.grid()
-#plt.savefig('velocidadtang.png')
-plt.show()
-
-
-
-#%%
-
-
-#PERTENECE AL CÓDIGO ANTERIOR, lo dejo acá abajo por las dudas
-#Aca se ve el ajuste con todos los puntos dispersos sin promediar
-
-# Modelos de vórtice
-def rankine(r, Omega, c):
-    return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
-
-# Ajusto con Burgers y grafico
-popt, pcov = curve_fit(burgers, r, vt, absolute_sigma=True) # <---- FALTA AGREGAR SIGMA
-
-graf = np.linspace(np.min(r), np.max(r), 1000)
-
-plt.figure()
-plt.plot(graf, burgers(graf, *popt))
-plt.plot(r, vt, ".")
-
-
-#%%
-
-datos = cargarDatos('rect3-5/')
-
-centro = calcularCentro(datos, porcentaje = 0.05)
-
+for video in videos:
+    x, y, u, v, err_u, err_v = datos[video].T
+    r, vt, err_vt, popt, pcov = tangencial[video]
+    
+    velmin = 1
+    r = r[vt > velmin]
+    err_vt = err_vt[vt > velmin]
+    vt = vt[vt > velmin]
+    figCampo, axCampo = plt.subplots(figsize=(10, 10))
+    axCampo.set_title(video)
+    axCampo.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+    axCampo.scatter([centros[video][0][0]], [centros[video][0][1]])
+    
+    graf = np.linspace(min(r), max(r), 1000)
+    
+    
+    axAjuste.errorbar(r, vt, yerr = err_vt, label = video)
+    axAjuste.plot(graf, burgers(graf, *popt))
+axAjuste.legend()
