@@ -112,9 +112,8 @@ def burgers(r, Omega, c):
     return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
 
 def velTangencial(datos, centro):
-    print(datos.shape)
     x, y, u, v, err_u, err_v = datos.T
-    
+
     # Cambio el origen
     x_desplazado, y_desplazado = x - centro[0], y - centro[1]
 
@@ -123,12 +122,12 @@ def velTangencial(datos, centro):
     y_filtrado = y_desplazado[x_desplazado != 0]
     u_filtrado = u[x_desplazado != 0]
     v_filtrado = v[x_desplazado != 0]
-    
+
     x_filtrado = x_filtrado[u_filtrado != 0]
     y_filtrado = y_filtrado[u_filtrado != 0]
     v_filtrado = v_filtrado[u_filtrado != 0]
     u_filtrado = u_filtrado[u_filtrado != 0]
-    
+
 
     # Paso a polares
     r = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -142,7 +141,7 @@ def velTangencial(datos, centro):
     #Hasta le agregó el error, chequear!!!
 
     # Número de bins para dividir los datos radiales
-    num_bins = 20
+    num_bins = 40
 
     # Calcular el radio para cada punto
     r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -160,14 +159,17 @@ def velTangencial(datos, centro):
         
         seleccionados = vt[mask]
         
-        print(len(seleccionados))
-        
-        vt_avg[i] = np.mean(seleccionados)
-        vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados))
+        vt_avg[i] = np.mean(seleccionados) if len(seleccionados) != 0 else 0
+        vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0
+
+
+    vt = vt_avg
+    r = bin_centers
+    inicio = 0
+
+    popt, pcov = curve_fit(burgers, r, vt, sigma = vt_err, absolute_sigma = True)
     
-    return bin_centers, vt_avg, vt_err
-
-
+    return bin_centers, vt_avg, vt_err, popt, pcov
 
 #%%
 # Videos
@@ -224,93 +226,110 @@ for fluido in fluidos:
     
 #%%
 plt.close('all')
-datos = cargarDatos('50v3/')
+datos = cargarDatos('30v3/')
 
 centro, error = calcularCentro(datos, porcentaje=0.02)
-
-plt.figure()
+# centro = (5.89, 5.93) 50v3
+centro = (5.5, 5.4)
+plt.figure(figsize=(8,8))
 x, y, u, v, u_err, v_err = datos.T
 plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
 plt.scatter(centro[0], centro[1])
 plt.show()
 
 
+r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
+minvel = 1.5
 
-
-x, y, u, v, err_u, err_v = datos.T
-
-# Cambio el origen
-x_desplazado, y_desplazado = x - centro[0], y - centro[1]
-
-# Tiro las velocidades nulas
-x_filtrado = x_desplazado[x_desplazado != 0]
-y_filtrado = y_desplazado[x_desplazado != 0]
-u_filtrado = u[x_desplazado != 0]
-v_filtrado = v[x_desplazado != 0]
-
-x_filtrado = x_filtrado[u_filtrado != 0]
-y_filtrado = y_filtrado[u_filtrado != 0]
-v_filtrado = v_filtrado[u_filtrado != 0]
-u_filtrado = u_filtrado[u_filtrado != 0]
-
-
-# Paso a polares
-r = np.sqrt(x_filtrado**2 + y_filtrado**2)
-th = np.arctan(y_filtrado / x_filtrado)
-
-# Calculo velocidad tangencial
-beta = np.arccos((u_filtrado * x_filtrado + v_filtrado * y_filtrado) / (r * np.sqrt(u_filtrado**2 + v_filtrado**2)))
-vt = np.sqrt(u_filtrado**2 + v_filtrado**2) * np.cos(np.pi / 2 - beta)
-
-#Todo lo que viene a partir de ahora es para que promedie los datos
-#Hasta le agregó el error, chequear!!!
-
-# Número de bins para dividir los datos radiales
-num_bins = 40
-
-# Calcular el radio para cada punto
-r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
-
-# Calcular el histograma radial
-hist, bin_edges = np.histogram(r_points, bins=num_bins)
-
-# Calcular el promedio de las velocidades tangenciales en cada bin
-vt_avg = np.zeros(num_bins)
-vt_err = np.zeros(num_bins)
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
-
-for i in range(num_bins):
-    mask = (r_points >= bin_edges[i]) & (r_points < bin_edges[i + 1])
-    
-    seleccionados = vt[mask]
-    
-    print(len(seleccionados) == hist[i])
-    
-    vt_avg[i] = np.mean(seleccionados) if len(seleccionados) != 0 else 0
-    vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0
-
-
-vt = vt_avg
-r = bin_centers
-inicio = 0
-
-r = r[vt > 1.5]
-
-vt_err = vt_err[vt > 1.5]
-vt = vt[vt> 1.5]
-
-def rankine(r, Omega, c):
-    return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
-
-popt, pcov = curve_fit(burgers, r, vt, sigma = vt_err, absolute_sigma = True, p0=(4.33, 2.33))
+r = r[vt >= minvel]
+err_vt = err_vt[vt>=minvel]
+vt = vt[vt>=minvel]
 
 graf = np.linspace(min(r), max(r), 1000)
 
 fig, ax = plt.subplots()
-# Graficar
-ax.plot(r, vt, ".")
+ax.plot(r, vt, ".", label = "Glicerina 30%")
 ax.plot(graf, burgers(graf, *popt))
+
+datos50 = cargarDatos('50v3/')
+
+centro50, error50 = calcularCentro(datos50, porcentaje=0.02)
+centro50 = (5.89, 5.93)
+plt.figure(figsize=(8,8))
+x50, y50, u50, v50, u_err50, v_err50 = datos50.T
+plt.quiver(x50, y50, u50, v50, color=cmap(u50, v50, 'plasma'))
+plt.scatter(centro50[0], centro50[1])
+plt.show()
+
+
+r50, vt50, err_vt50, popt50, pcov50 = velTangencial(datos50, centro50)
+
+minvel50 = 1.5
+
+r50 = r50[vt50 >= minvel50]
+err_vt50 = err_vt50[vt50>=minvel50]
+vt50 = vt50[vt50>=minvel50]
+
+graf50 = np.linspace(min(r50), max(r50), 1000)
+# Graficar
+ax.plot(r50, vt50, ".", label = "Glicerina 50%")
+ax.plot(graf50, burgers(graf50, *popt50))
 # ax.plot(x, y, ".")
+ax.legend()
+
+#%%
+plt.close('all')
+datos = cargarDatos('30v3/')
+
+centro, error = calcularCentro(datos, porcentaje=0.02)
+# centro = (5.89, 5.93) 50v3
+centro = (5.5, 5.4)
+plt.figure(figsize=(8,8))
+x, y, u, v, u_err, v_err = datos.T
+plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+plt.scatter(centro[0], centro[1])
+plt.show()
+
+
+r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
+minvel = 1.5
+
+r = r[vt >= minvel]
+err_vt = err_vt[vt>=minvel]
+vt = vt[vt>=minvel]
+
+graf = np.linspace(min(r), max(r), 1000)
+
+fig, ax = plt.subplots()
+ax.plot(r, vt, ".", label = "Glicerina 30%")
+ax.plot(graf, burgers(graf, *popt))
+
+datos50 = cargarDatos('50v3/')
+
+centro50, error50 = calcularCentro(datos50, porcentaje=0.02)
+centro50 = (5.89, 5.93)
+plt.figure(figsize=(8,8))
+x50, y50, u50, v50, u_err50, v_err50 = datos50.T
+plt.quiver(x50, y50, u50, v50, color=cmap(u50, v50, 'plasma'))
+plt.scatter(centro50[0], centro50[1])
+plt.show()
+
+
+r50, vt50, err_vt50, popt50, pcov50 = velTangencial(datos50, centro50)
+
+minvel50 = 1.5
+
+r50 = r50[vt50 >= minvel50]
+err_vt50 = err_vt50[vt50>=minvel50]
+vt50 = vt50[vt50>=minvel50]
+
+graf50 = np.linspace(min(r50), max(r50), 1000)
+# Graficar
+ax.plot(r50, vt50, ".", label = "Glicerina 50%")
+ax.plot(graf50, burgers(graf50, *popt50))
+# ax.plot(x, y, ".")
+ax.legend()
+
 #%%
 plt.close('all')
 plt.figure(figsize=(8,8))
@@ -432,3 +451,11 @@ graf = np.linspace(np.min(r), np.max(r), 1000)
 plt.figure()
 plt.plot(graf, burgers(graf, *popt))
 plt.plot(r, vt, ".")
+
+
+#%%
+
+datos = cargarDatos('rect3-5/')
+
+centro = calcularCentro(datos, porcentaje = 0.05)
+
