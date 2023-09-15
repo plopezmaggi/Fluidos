@@ -112,6 +112,7 @@ def burgers(r, Omega, c):
     return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
 
 def velTangencial(datos, centro):
+    print(datos.shape)
     x, y, u, v, err_u, err_v = datos.T
     
     # Cambio el origen
@@ -120,8 +121,14 @@ def velTangencial(datos, centro):
     # Tiro las velocidades nulas
     x_filtrado = x_desplazado[x_desplazado != 0]
     y_filtrado = y_desplazado[x_desplazado != 0]
-    u_filtrado = u_sel[x_desplazado != 0]
-    v_filtrado = v_sel[x_desplazado != 0]
+    u_filtrado = u[x_desplazado != 0]
+    v_filtrado = v[x_desplazado != 0]
+    
+    x_filtrado = x_filtrado[u_filtrado != 0]
+    y_filtrado = y_filtrado[u_filtrado != 0]
+    v_filtrado = v_filtrado[u_filtrado != 0]
+    u_filtrado = u_filtrado[u_filtrado != 0]
+    
 
     # Paso a polares
     r = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -135,7 +142,7 @@ def velTangencial(datos, centro):
     #Hasta le agregó el error, chequear!!!
 
     # Número de bins para dividir los datos radiales
-    num_bins = 45
+    num_bins = 20
 
     # Calcular el radio para cada punto
     r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -152,6 +159,8 @@ def velTangencial(datos, centro):
         mask = (r_points >= bin_edges[i]) & (r_points < bin_edges[i + 1])
         
         seleccionados = vt[mask]
+        
+        print(len(seleccionados))
         
         vt_avg[i] = np.mean(seleccionados)
         vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados))
@@ -175,15 +184,15 @@ datos = cargarDatos(video)
 centroTot, c = calcularCentro(datos)
 centroFiltrado, c = calcularCentro(datos, 0.05)
 #%%
-
+plt.close('all')
 def burgers(r, Omega, c):
-    return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
+    return Omega * (1 - np.exp(-r**2 / c**2)) / r
 
+fluidos = [37]
 # Comparo todas las velocidades para un mismo fluido
 for fluido in fluidos:   
     fig, ax = plt.subplots()
-    
-    fig.set_title(f"GLicerina {fluido}%")
+    ax.set_title(f"Glicerina {fluido}%")
     
     for vel in velocidades:
         video = f"{fluido}v{vel}e/"
@@ -195,14 +204,113 @@ for fluido in fluidos:
         datos = cargarDatos(video)
         
         # Calcular centro
-        centro = calcularCentro(datos, porcentaje=0.05)
+        centro, error = calcularCentro(datos, porcentaje=0.05)
+        
+        # Graficar campo de velocidades
+        plt.figure()
+        plt.title(video)
+        x, y, u, v, u_err, v_err = datos.T
+        plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+        plt.scatter(centro[0], centro[1])
+        plt.show()
         
         # Calcular velocidad tangencial
         r, vt, err_vt = velTangencial(datos, centro)
         
         # Graficar
-        ax.errorbar(r, vt, yerr=err_vt)
+        ax.errorbar(r, vt, yerr=err_vt, label=vel)
     
+    ax.legend()
+    
+#%%
+plt.close('all')
+datos = cargarDatos('50v3/')
+
+centro, error = calcularCentro(datos, porcentaje=0.02)
+
+plt.figure()
+x, y, u, v, u_err, v_err = datos.T
+plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+plt.scatter(centro[0], centro[1])
+plt.show()
+
+
+
+
+x, y, u, v, err_u, err_v = datos.T
+
+# Cambio el origen
+x_desplazado, y_desplazado = x - centro[0], y - centro[1]
+
+# Tiro las velocidades nulas
+x_filtrado = x_desplazado[x_desplazado != 0]
+y_filtrado = y_desplazado[x_desplazado != 0]
+u_filtrado = u[x_desplazado != 0]
+v_filtrado = v[x_desplazado != 0]
+
+x_filtrado = x_filtrado[u_filtrado != 0]
+y_filtrado = y_filtrado[u_filtrado != 0]
+v_filtrado = v_filtrado[u_filtrado != 0]
+u_filtrado = u_filtrado[u_filtrado != 0]
+
+
+# Paso a polares
+r = np.sqrt(x_filtrado**2 + y_filtrado**2)
+th = np.arctan(y_filtrado / x_filtrado)
+
+# Calculo velocidad tangencial
+beta = np.arccos((u_filtrado * x_filtrado + v_filtrado * y_filtrado) / (r * np.sqrt(u_filtrado**2 + v_filtrado**2)))
+vt = np.sqrt(u_filtrado**2 + v_filtrado**2) * np.cos(np.pi / 2 - beta)
+
+#Todo lo que viene a partir de ahora es para que promedie los datos
+#Hasta le agregó el error, chequear!!!
+
+# Número de bins para dividir los datos radiales
+num_bins = 40
+
+# Calcular el radio para cada punto
+r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
+
+# Calcular el histograma radial
+hist, bin_edges = np.histogram(r_points, bins=num_bins)
+
+# Calcular el promedio de las velocidades tangenciales en cada bin
+vt_avg = np.zeros(num_bins)
+vt_err = np.zeros(num_bins)
+bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+
+for i in range(num_bins):
+    mask = (r_points >= bin_edges[i]) & (r_points < bin_edges[i + 1])
+    
+    seleccionados = vt[mask]
+    
+    print(len(seleccionados) == hist[i])
+    
+    vt_avg[i] = np.mean(seleccionados) if len(seleccionados) != 0 else 0
+    vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0
+
+
+vt = vt_avg
+r = bin_centers
+inicio = 0
+
+r = r[vt > 1.5]
+
+vt_err = vt_err[vt > 1.5]
+vt = vt[vt> 1.5]
+
+def rankine(r, Omega, c):
+    return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
+
+popt, pcov = curve_fit(burgers, r, vt, sigma = vt_err, absolute_sigma = True, p0=(4.33, 2.33))
+
+graf = np.linspace(min(r), max(r), 1000)
+
+fig, ax = plt.subplots()
+# Graficar
+ax.plot(r, vt, ".")
+ax.plot(graf, burgers(graf, *popt))
+# ax.plot(x, y, ".")
 #%%
 plt.close('all')
 plt.figure(figsize=(8,8))

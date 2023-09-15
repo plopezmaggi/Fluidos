@@ -154,9 +154,9 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     center_x, center_y = centro
                     
                     # Recorte circular
-                    center_x = 554  # coordenada x del centro en px
-                    center_y = 929  # coordenada y del centro en px
-                    radius = 450    # radio
+                    center_x = 932  # coordenada x del centro en px
+                    center_y = 526  # coordenada y del centro en px
+                    radius = 393   # radio
                     x1 = center_x - radius
                     y1 = center_y - radius
                     x2 = center_x + radius
@@ -202,9 +202,9 @@ def pre_process(dir: str, file_name: str, start_at: int, stop_at: int, folder=""
                     center_x, center_y = centro
                     
                     # Recorte circular
-                    center_x = 554  # coordenada x del centro en px
-                    center_y = 929  # coordenada y del centro en px
-                    radius = 450    # radio
+                    center_x = 541  # coordenada x del centro en px
+                    center_y = 971  # coordenada y del centro en px
+                    radius = 440   # radio
                     x1 = center_x - radius
                     y1 = center_y - radius
                     x2 = center_x + radius

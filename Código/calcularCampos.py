@@ -116,9 +116,9 @@ def get_velocity_field(start, stop, path, fps, pixel2cm, step=1, winsize=32,
         # Reemplaza por NaN a los vectores con demasiado ruido
         u1, v1 = u0.copy(), v0.copy()
 
-        u1, v1, mask = validation.sig2noise_val(u1, v1, 
-                                                sig2noise, 
-                                                threshold = threshold)
+        # u1, v1, mask = validation.sig2noise_val(u1, v1, 
+        #                                         sig2noise, 
+        #                                         threshold = threshold)
         
         # Reemplaza por NaN a los vectores muy alejados en módulo de la media
         u1, v1 = remove_velocity_outliers(u1, v1)
@@ -181,7 +181,7 @@ stop = max(frames)
 video = cv2.VideoCapture('video.mp4')
 fps = video.get(cv2.CAP_PROP_FPS)
 
-diametro_px = 882 # <----- CAMBIEN ESTO!!!!!!
+diametro_px = 980 # <----- CAMBIEN ESTO!!!!!!
 diametro_cm = 12.7
 
 pixel2cm = diametro_px / diametro_cm ### scale in pixel/cm
