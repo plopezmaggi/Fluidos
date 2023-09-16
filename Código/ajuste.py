@@ -166,7 +166,7 @@ def velTangencial(datos, centro):
 
     popt, pcov = curve_fit(burgers, bin_centers, vt_avg, sigma = vt_err, absolute_sigma = True)
     
-    # return bin_centers, vt_avg, vt_err, popt, pcov
+    return bin_centers, vt_avg, vt_err, popt, pcov
     return r, vt, vt_err, popt, pcov
 
 #%%
@@ -308,3 +308,31 @@ for video in videos:
     axAjuste.errorbar(r, vt, yerr = err_vt, label = video)
     axAjuste.plot(graf, burgers(graf, *popt))
 axAjuste.legend()
+
+#%%
+#PARA AJUSTAR COMO ANTES, UN SOLO VIDEITO
+plt.close('all')
+datos = cargarDatos('30v4e/')
+
+centro, error = calcularCentro(datos, porcentaje=0.02)
+# centro = (5.89, 5.93) 50v3
+centro = (5.50, 4.95)
+plt.figure(figsize=(8,8))
+x, y, u, v, u_err, v_err = datos.T
+plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+plt.scatter(centro[0], centro[1])
+plt.show()
+
+
+r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
+minvel = 3.5
+
+r = r[vt >= minvel]
+err_vt = err_vt[vt>=minvel]
+vt = vt[vt>=minvel]
+
+graf = np.linspace(min(r), max(r), 1000)
+
+fig, ax = plt.subplots()
+ax.plot(r, vt, ".", label = "Glicerina 30%")
+ax.plot(graf, burgers(graf, *popt))
