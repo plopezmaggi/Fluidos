@@ -111,6 +111,9 @@ def cmap(u, v, colormap):
 def burgers(r, Omega, c):
     return Omega * c**2 * (1 - np.exp(-r**2 / c**2)) / r
 
+def rankine(r, Omega, c):
+    return np.piecewise(r, [r < c, r >= c], [lambda x : x * Omega, lambda x : Omega * c**2 / x])
+
 def velTangencial(datos, centro):
     x, y, u, v, err_u, err_v = datos.T
 
@@ -141,7 +144,7 @@ def velTangencial(datos, centro):
     #Hasta le agregó el error, chequear!!!
 
     # Número de bins para dividir los datos radiales
-    num_bins = 15
+    num_bins = 40
 
     # Calcular el radio para cada punto
     r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -231,7 +234,7 @@ plt.show()
 
 
 r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
-minvel = 1.5
+minvel = 2
 
 r = r[vt >= minvel]
 err_vt = err_vt[vt>=minvel]
@@ -312,11 +315,11 @@ axAjuste.legend()
 #%%
 #PARA AJUSTAR COMO ANTES, UN SOLO VIDEITO
 plt.close('all')
-datos = cargarDatos('30v4e/')
+datos = cargarDatos('30v3/')
 
 centro, error = calcularCentro(datos, porcentaje=0.02)
 # centro = (5.89, 5.93) 50v3
-centro = (5.50, 4.95)
+centro = (5.50, 5.37)
 plt.figure(figsize=(8,8))
 x, y, u, v, u_err, v_err = datos.T
 plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
@@ -325,7 +328,7 @@ plt.show()
 
 
 r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
-minvel = 3.5
+minvel = 1.5
 
 r = r[vt >= minvel]
 err_vt = err_vt[vt>=minvel]
@@ -336,3 +339,70 @@ graf = np.linspace(min(r), max(r), 1000)
 fig, ax = plt.subplots()
 ax.plot(r, vt, ".", label = "Glicerina 30%")
 ax.plot(graf, burgers(graf, *popt))
+
+#%%
+
+#Grafico definitivo para 1 único video con barras de error y todo lindo
+
+plt.plot(r, vt, ".")
+plt.plot(graf, burgers(graf, *popt))
+plt.ylabel('Velocidad tangencial [cm/s]')
+plt.xlabel('Distancia al centro del vórtice [cm]')
+plt.errorbar(r, vt, yerr=err_vt, fmt='.')
+plt.grid()
+#plt.savefig('ajuste.png')
+
+#%%
+
+#Celda para el análisis estadístico
+
+import scipy.stats as stats
+
+#Defino parámetros que vamos a necesitar para el análisis
+
+puntos = len(r)
+params = len(popt)
+y = vt
+y_modelo = burgers(r,popt[0],popt[1]) #---> Acá cambiar según el modelo que estemos ajustando
+yerr = err_vt
+
+promedio = np.mean(y)
+residuo = y - y_modelo
+TSS = sum((y-promedio)**2)
+RSS = sum(residuo**2)
+ESS = sum((y_modelo-promedio)**2)
+
+#Chi cuadrado: Calcula chi^2, p-valor y a partir de estos resultados tira la conclusión
+
+chi_cuadrado = np.sum(((y-y_modelo)/yerr)**2)
+p_chi = stats.chi2.sf(chi_cuadrado, puntos - 1 - params)
+
+print('chi^2: ' + str(chi_cuadrado))
+print('p-valor del chi^2: ' + str(p_chi))
+if yerr[0]==0:
+    print('No se declararon errores en la variable y.')
+elif p_chi<0.05:
+    print('Se rechaza la hipótesis de que el modelo ajuste a los datos.')
+else:
+    print('No se puede rechazar la hipótesis de que el modelo ajuste a los datos.')
+
+#R cuadrado
+
+R_cuadrado = 1-RSS/TSS
+R_cuadrado_aj = 1-(RSS/TSS)*(puntos-params)/(puntos-1)
+
+print('R^2: ' + str(R_cuadrado))
+print('R^2 ajustado: ' + str(R_cuadrado_aj))
+
+#F-test: Nos dice si la dependencia es por azar o no. Lo calcula y a partir de esos resultados nos tira la conclusión
+
+F = ESS*(puntos-params)/RSS/(params-1)
+p_f = stats.f.sf(F,params-1,puntos-params)
+
+print('Test F: ' + str(F))
+print('p-valor del F: ' + str(p_f))
+if p_f<0.05:
+    print('Se rechaza la hipótesis de que el modelo ajuste tan bien como uno sin variables independientes.')
+else:
+    print('No se puede rechazar la hipótesis de que el modelo ajuste tan bien como uno sin variables independientes.')
+
