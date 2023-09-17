@@ -144,7 +144,7 @@ def velTangencial(datos, centro):
     #Hasta le agregó el error, chequear!!!
 
     # Número de bins para dividir los datos radiales
-    num_bins = 40
+    num_bins = 20
 
     # Calcular el radio para cada punto
     r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -167,7 +167,7 @@ def velTangencial(datos, centro):
 
 
 
-    popt, pcov = curve_fit(burgers, bin_centers, vt_avg, sigma = vt_err, absolute_sigma = True)
+    popt, pcov = curve_fit(burgers, bin_centers, vt_avg, sigma = vt_err, absolute_sigma = True, p0 = [7, 1.097])
     
     return bin_centers, vt_avg, vt_err, popt, pcov
     return r, vt, vt_err, popt, pcov
@@ -175,47 +175,63 @@ def velTangencial(datos, centro):
 #%%
 
 """
-Loop sobre todos los videos (no lo usamos)
+Loop sobre todos los videos.
 """
+import os
+
 plt.close('all')
 
-# Videos
-velocidades = ['3-5', '4', '4-5']
-fluidos = [30, 37, 50]
+for video in os.listdir():
+    if not os.path.isdir(video) or video in ['Código', 'videos-sin-procesar', '25v4-5', 'rect4-5', 'Guías', 'rect4', 'Figuras informe', '.git']:
+        continue
+    
+    print(video)
+    video = video + "/"
+    
+    # Abrir datos
+    datos = cargarDatos(video)
+    
+    # Calcular centro
+    centro, error = calcularCentro(datos, porcentaje=0.05)
+    
+    # Graficar campo de velocidades
+    fig, ax = plt.subplots(ncols = 2, figsize=(12, 12))
+    ax[0].set_title(video)
+    x, y, u, v, u_err, v_err = datos.T
+    ax[0].quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+    ax[0].scatter(centro[0], centro[1])
+    
+    ax[0].imshow(plt.imread(video + 'cuadros/' + os.listdir(video + 'cuadros/')[0]), extent=[min(x), max(x), min(y), max(y)])
+    
+    # Calcular velocidad tangencial
+    r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
+    
+    # Graficar
+    ax[1].errorbar(r, vt, yerr=err_vt)
+    
+#%%
+video = '50v4/'
 
-# Comparo todas las velocidades para un mismo fluido
-for fluido in fluidos:   
-    fig, ax = plt.subplots()
-    ax.set_title(f"Glicerina {fluido}%")
-    
-    for vel in velocidades:
-        video = f"{fluido}v{vel}e/"
-        
-        if not os.path.isdir(video):
-            continue
-        
-        # Abrir datos
-        datos = cargarDatos(video)
-        
-        # Calcular centro
-        centro, error = calcularCentro(datos, porcentaje=0.05)
-        
-        # Graficar campo de velocidades
-        plt.figure()
-        plt.title(video)
-        x, y, u, v, u_err, v_err = datos.T
-        plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
-        plt.scatter(centro[0], centro[1])
-        plt.show()
-        
-        # Calcular velocidad tangencial
-        r, vt, err_vt = velTangencial(datos, centro)
-        
-        # Graficar
-        ax.errorbar(r, vt, yerr=err_vt, label=vel)
-    
-    ax.legend()
-    
+# Abrir datos
+datos = cargarDatos(video)
+
+# Calcular centro
+centro, error = calcularCentro(datos, porcentaje=0.05)
+
+# Graficar campo de velocidades
+fig, ax = plt.subplots(ncols = 2, figsize=(12, 12))
+ax[0].set_title(video)
+x, y, u, v, u_err, v_err = datos.T
+ax[0].quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
+ax[0].scatter(centro[0], centro[1])
+
+ax[0].imshow(plt.imread(video + 'cuadros/' + os.listdir(video + 'cuadros/')[0]), extent=[min(x), max(x), min(y), max(y)])
+
+# Calcular velocidad tangencial
+r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
+
+# Graficar
+ax[1].errorbar(r, vt, yerr=err_vt)
 #%%
 """
 Comparación para v3
@@ -234,13 +250,10 @@ plt.show()
 
 
 r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
-<<<<<<< HEAD
-minvel = 2
 
-=======
 minvel = 1.5
 print(r.shape, vt.shape, err_vt.shape)
->>>>>>> a386d03da5c2319041b0c7f917b0652b080823e6
+
 r = r[vt >= minvel]
 # err_vt = err_vt[vt>=minvel]
 vt = vt[vt>=minvel]
@@ -324,7 +337,7 @@ datos = cargarDatos('30v3/')
 
 centro, error = calcularCentro(datos, porcentaje=0.02)
 # centro = (5.89, 5.93) 50v3
-centro = (5.50, 5.37)
+# centro = (5.21, 5.16)
 plt.figure(figsize=(8,8))
 x, y, u, v, u_err, v_err = datos.T
 plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
@@ -333,7 +346,7 @@ plt.show()
 
 
 r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
-minvel = 1.5
+minvel = 1
 
 r = r[vt >= minvel]
 err_vt = err_vt[vt>=minvel]
