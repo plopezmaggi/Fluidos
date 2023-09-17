@@ -234,10 +234,15 @@ plt.show()
 
 
 r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
+<<<<<<< HEAD
 minvel = 2
 
+=======
+minvel = 1.5
+print(r.shape, vt.shape, err_vt.shape)
+>>>>>>> a386d03da5c2319041b0c7f917b0652b080823e6
 r = r[vt >= minvel]
-err_vt = err_vt[vt>=minvel]
+# err_vt = err_vt[vt>=minvel]
 vt = vt[vt>=minvel]
 
 graf = np.linspace(min(r), max(r), 1000)
@@ -245,7 +250,7 @@ graf = np.linspace(min(r), max(r), 1000)
 fig, ax = plt.subplots()
 ax.plot(r, vt, ".", label = "Glicerina 30%")
 ax.plot(graf, burgers(graf, *popt))
-
+#%%
 datos50 = cargarDatos('50v3/')
 
 centro50, error50 = calcularCentro(datos50, porcentaje=0.02)
