@@ -144,7 +144,7 @@ def velTangencial(datos, centro):
     #Hasta le agregó el error, chequear!!!
 
     # Número de bins para dividir los datos radiales
-    num_bins = 20
+    num_bins = 40
 
     # Calcular el radio para cada punto
     r_points = np.sqrt(x_filtrado**2 + y_filtrado**2)
@@ -165,7 +165,11 @@ def velTangencial(datos, centro):
         vt_avg[i] = np.mean(seleccionados) if len(seleccionados) != 0 else 0
         vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0
 
+    minvel = 1.5
 
+    bin_centers = bin_centers[vt_avg >= minvel]
+    vt_err = vt_err[vt_avg >=minvel]
+    vt_avg = vt_avg[vt_avg>=minvel]
 
     popt, pcov = curve_fit(burgers, bin_centers, vt_avg, sigma = vt_err, absolute_sigma = True, p0 = [7, 1.097])
     
@@ -335,9 +339,11 @@ axAjuste.legend()
 plt.close('all')
 datos = cargarDatos('30v3/')
 
-centro, error = calcularCentro(datos, porcentaje=0.02)
+centro, error = calcularCentro(datos, porcentaje=0.05)
 # centro = (5.89, 5.93) 50v3
 # centro = (5.21, 5.16)
+# centro = (7.17, 6.44)
+centro = (5.51, 5.39)
 plt.figure(figsize=(8,8))
 x, y, u, v, u_err, v_err = datos.T
 plt.quiver(x, y, u, v, color=cmap(u, v, 'plasma'))
@@ -346,7 +352,7 @@ plt.show()
 
 
 r, vt, err_vt, popt, pcov = velTangencial(datos, centro)
-minvel = 1
+minvel = 0
 
 r = r[vt >= minvel]
 err_vt = err_vt[vt>=minvel]
