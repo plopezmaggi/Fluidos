@@ -116,6 +116,8 @@ def rankine(r, Omega, c):
 
 def velTangencial(datos, centro):
     x, y, u, v, err_u, err_v = datos.T
+    
+    print(u_err, v_err.shape)
 
     # Cambio el origen
     x_desplazado, y_desplazado = x - centro[0], y - centro[1]
@@ -162,8 +164,13 @@ def velTangencial(datos, centro):
         
         seleccionados = vt[mask]
         
+        # plt.figure()
+        # plt.hist(seleccionados)
+        # plt.show()
         vt_avg[i] = np.mean(seleccionados) if len(seleccionados) != 0 else 0
-        vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0
+        vt_err[i] = np.std(seleccionados) / np.sqrt(len(seleccionados)) if len(seleccionados) != 0 else 0 
+        
+        vt_err += np.sqrt(u_err**2 + v_err**2)
 
     minvel =4.5
     
@@ -366,7 +373,9 @@ vt = vt[vt>=minvel]
 graf = np.linspace(min(r), max(r), 1000)
 
 fig, ax = plt.subplots()
-ax.plot(r, vt, ".", label = "Glicerina 30%")
+(_, caps, _)  = ax.errorbar(r, vt, yerr = err_vt, marker = ".", capsize = 5, label = "Glicerina 30%")
+for cap in caps:
+    cap.set_markeredgewidth(1)
 ax.plot(graf, burgers(graf, *popt))
 
 #%%
